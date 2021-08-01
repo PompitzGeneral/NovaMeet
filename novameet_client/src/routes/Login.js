@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "routes/Login.css"
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 const Login = () => {
 
@@ -72,7 +73,9 @@ const Login = () => {
         } else if (res.data.user_id === inputID) {
           console.log('======================', '로그인 성공');
           sessionStorage.setItem('user_id', inputID);
+          // localStorage.setItem('user_id', inputID);
           // 작업 완료 되면 페이지 이동(새로고침)
+
           document.location.href = '/';
         } else {
           console.log('======================', '로그인 else');
@@ -101,9 +104,11 @@ const Login = () => {
         <div>
           <button type='button' className='textInput submitButton' onClick={onLoginButtonClicked}>로그인</button>
         </div>
+        <Link to="/Register">
         <div>
           <button type='button' className='textInput submitButton' onClick={onRegisterButtonClicked}>회원가입</button>
         </div>
+        </Link>
     </div>
   );
 };

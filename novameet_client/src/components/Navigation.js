@@ -9,16 +9,21 @@ const Navigation = ({ isLogin }) => {
   return (
   <div className="sidebar">
     <div className="sidebar__categories">
+      <Link to="/">
       <div className="sidebar__category">
         <i className="material-icons">home</i>
         {/* Todo. 밑줄 없애기 */}
-        <Link to="/"><span>홈</span></Link>
+        <span>홈</span>
       </div>
+      </Link>
+      <Link to="/Record">
       <div className="sidebar__category">
         <i className="material-icons">history</i>
-        <Link to="/Record"><span>작업/학습 기록</span></Link>
-        </div>
+        <span>작업/학습 기록</span>
       </div>
+      </Link>
+    </div>
+      
     {/* <hr />
     <div className="sidebar__categories">
       <div className="sidebar__category">

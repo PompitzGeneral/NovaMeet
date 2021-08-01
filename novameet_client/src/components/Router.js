@@ -8,29 +8,30 @@ import ChatRoom from "routes/ChatRoom";
 import Navigation from "components/Navigation";
 import Header from "components/Header";
 
-const AppRouter = ({isLogin}) => {
+const AppRouter = ({ isLogin, userInfo }) => {
    console.log(`Router, isLogin : ${isLogin}`);
+
   return (
     <Router>
-       <Header isLogin={isLogin}/>
+       <Header isLogin={isLogin} userInfo={userInfo}/>
        <div className="mainBody">
       <Navigation isLogin={isLogin}/>
       <Switch>
          <Route exact path="/">
-            <Home/>
+            <Home isLogin={isLogin}/>
          </Route>
-         <Route exact path="/record">
+         <Route exact path="/Record">
             <Record/>
          </Route>
-         <Route exact path="/login">
-            <Login/>
+         <Route exact path="/Register"> 
+            { (!isLogin) ? <Register/> : <Home isLogin={isLogin}/> } 
          </Route>
-         <Route exact path="/register">
-            <Register/>
-         </Route>
-         <Route exact path="/chatroom">
-            <ChatRoom/>
-         </Route>
+         <Route exact path="/Login"> 
+            { (!isLogin) ? <Login/> : <Home isLogin={isLogin}/>}    
+         </Route>  
+         <Route exact path="/ChatRoom/:roomID"> 
+            { (isLogin) ? <ChatRoom/> : <Login/> }
+         </Route>     
       </Switch>
       </div>
     </Router>

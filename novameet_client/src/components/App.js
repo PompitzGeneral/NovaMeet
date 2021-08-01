@@ -7,16 +7,33 @@ function App() {
 
   // 로그인 상태 관리
   const [isLogin, setIsLogin] = useState(false);
+  const [userInfo, setUserInfo] = useState({
+    email:'',
+    displayName:'' 
+    });
 
   useEffect(() => {
+    const userEmail = sessionStorage.getItem('user_id');
     if (sessionStorage.getItem('user_id') === null) {
+    // if (localStorage.getItem('user_id') === null) {
       // sessionStorage 에 user_id 라는 key 값으로 저장된 값이 없다면
-      console.log('App - useEffect(sessionStorage.getItem === null), isLogin : ', isLogin)
+      console.log('App - useEffect(sessionStorage.getItem === null), isLogin : ', isLogin);
+
     } else {
       // sessionStorage 에 user_id 라는 key 값으로 저장된 값이 있다면
       // 로그인 상태 변경
-      setIsLogin(true)
-      console.log('App - useEffect(sessionStorage.getItem !== null), isLogin : ', isLogin)
+      setIsLogin(true);
+
+      if ((userInfo.email !== userEmail) || (userInfo.displayName !== userEmail)) {
+        setUserInfo({
+          email: userEmail,
+          displayName: userEmail
+        });
+      }
+      
+      console.log('App - useEffect(sessionStorage.getItem !== null), isLogin : ', isLogin);
+      console.log('App - useEffect(sessionStorage.getItem !== null), userInfo : ');
+      console.log(userInfo);
     }
   })
 
@@ -24,7 +41,7 @@ function App() {
     <>
     {console.log(`App Rendered, isLogin : ${isLogin}`)}
         {/* <Header isLogin={isLogin}/> */}
-        <AppRouter isLogin={isLogin}/>
+        <AppRouter isLogin={isLogin} userInfo={userInfo}/>
       {/* <footer> &copy; {new Date().getFullYear()} NovaMeet Footer </footer> */}
     </>
   );

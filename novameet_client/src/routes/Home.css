@@ -1,5 +1,5 @@
    /* videos */
-   .videos {
+   .rooms {
     background-color: #f9f9f9;
     width: 100%;
     height: 100%;
@@ -8,59 +8,9 @@
     /* overflow-y: scroll; */
   }
   
-  .videos__container {
+  .rooms__container {
     display: flex;
-  
     flex-direction: row;
     justify-content: space-around;
     flex-wrap: wrap;
   }
-  
-  .video {
-    width: 310px;
-    margin-left: 5px;
-    margin-right: 5px;
-    margin-bottom: 30px;
-  }
-  
-  .video__thumbnail {
-    width: 100%;
-    height: 170px;
-  }
-  
-  .video__thumbnail img {
-    object-fit: cover;
-    height: 100%;
-    width: 100%;
-  }
-  
-  .author img {
-    object-fit: cover;
-    border-radius: 50%;
-    height: 40px;
-    width: 40px;
-    margin-right: 10px;
-  }
-  
-  .video__details {
-    display: flex;
-    margin-top: 10px;
-  }
-  
-  .title {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .title h3 {
-    color: rgb(3, 3, 3);
-    line-height: 18px;
-    font-size: 14px;
-    margin-bottom: 6px;
-  }
-
-  .title a {
-  text-decoration: none;
-  color: rgb(96, 96, 96);
-  font-size: 14px;
-}

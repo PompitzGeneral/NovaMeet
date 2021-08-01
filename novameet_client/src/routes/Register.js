@@ -12,6 +12,8 @@ const Register = () => {
   const [inputDisplayName, setInputDisplayName] = useState('');
 
   const [authNumber, setAuthNumber] = useState('');
+  // 아래와 같이 변수로 놓을 시 다른 항목 입력하면서 Rendering 될 때 값이 초기화 됨
+  // let authNumber = '';
 
   useEffect(() => {
     // 첫 랜더링 시 발생하는 콜백
@@ -79,27 +81,30 @@ const Register = () => {
   //이메일 인증 버튼 클릭
   const onEmailAuthButtonClicked = () => {
 
-    setAuthNumber(Math.random().toString().substr(2, 6));
+    const randNum = Math.random().toString().substr(2, 6);
 
-    console.log(`Email Auth Button Clicked,
-      user_email:${inputEmail}, auth_number:${authNumber}`);
+    console.log(`Email Auth Button Clicked, user_email:${inputEmail}, auth_number:${randNum}`);
 
     axios.post('/api/emailAuth', null, {
       params: {
         'user_email': inputEmail,
-        'auth_number': authNumber
+        'auth_number': randNum
       }
     })
       .then(res => {
         console.log(res);
-        console.log(`received Email Auth response,
-      user_email:${inputEmail}, auth_number:${authNumber}`);
         if (res.data.responseCode === 1) {
           alert('입력된 이메일 주소로 인증번호를 발송했습니다.');
+          setAuthNumber(randNum);
+        } else if (res.data.responseCode === 0){
+          alert(`이미 사용중인 이메일 주소입니다.`);
+          setAuthNumber('');
         } else if (res.data.responseCode === -1){
           alert(`인증번호 발송 실패. error message : ${res.data.msg}`);
+          setAuthNumber('');
         } else {
           alert(`인증번호 발송 실패. error message : ${res.data.msg}`);
+          setAuthNumber('');
         }
       })
       .catch()
@@ -109,10 +114,9 @@ const Register = () => {
     const onRegisterButtonClicked = () => {
       console.log("register request Button Clicked");
 
-      // todo. 닉네임이 이미 존재합니다.
+      // Todo. 닉네임 존재 체크
 
-      console.log(`test1 authNumber:${authNumber}`);
-
+      // Todo. Email 체크
 
       // 유효성 검사 진행
       if (!checkEmailPattern(inputEmail)) {
@@ -122,8 +126,13 @@ const Register = () => {
 
       console.log(`test2 authNumber:${authNumber}`);
 
+      if (!inputEmailAuth) {
+        alert("이메일 인증 번호를 입력해 주세요");
+        return;
+      }
+
       if (!checkEmailAuth(inputEmailAuth)) {
-        alert("이메일 인증 번호가 올바르지 않습니다..");
+        alert("이메일 인증 번호가 올바르지 않습니다");
         return;
       }
 
@@ -157,7 +166,7 @@ const Register = () => {
             alert(`log 확인 필요`);
           } else if (res.data.responseCode === 0) {
             console.log('======================', res.data.msg);
-            alert('이미 사용중인 ID입니다.');
+            alert('이미 사용중인 Email 주소입니다.');
           } else if (res.data.responseCode === 1) {
             console.log('======================', '회원가입 성공');
             alert('회원가입이 정상적으로 완료되었습니다.');
@@ -175,24 +184,24 @@ const Register = () => {
         <h2>회원가입</h2>
         <div>
           <label htmlFor='input_name'>닉네임</label>
-          <input type='text' className='textInput' value={inputDisplayName} onChange={handleInputDisplayName} />
+          <input type='text' className='textInput' value={inputDisplayName} onChange={handleInputDisplayName}/>
         </div>
         <div>
           <label htmlFor='input_email'>이메일</label>
-          <input type='text' className='textInput' value={inputEmail} onChange={handleInputEmail} />
+          <input type='text' className='textInput' value={inputEmail} onChange={handleInputEmail}/>
           <button type='button' className='textInput submitButton' onClick={onEmailAuthButtonClicked}>인증번호 발송</button>
         </div>
         <div>
           <label htmlFor='input_auth'>이메일 인증번호</label>
-          <input type='text' className='textInput' value={inputEmailAuth} onChange={handleInputEmailAuth} />
+          <input type='text' className='textInput' value={inputEmailAuth} onChange={handleInputEmailAuth}/>
         </div>
         <div>
           <label htmlFor='input_pw'>패스워드</label>
-          <input type='password' className='textInput' value={inputPW} onChange={handleInputPW} />
+          <input type='password' className='textInput' value={inputPW} onChange={handleInputPW} autocomplete="new-password"/>
         </div>
         <div>
           <label htmlFor='input_pw'>패스워드 확인</label>
-          <input type='password' className='textInput' value={inputRePW} onChange={handleInputRePW} />
+          <input type='password' className='textInput' value={inputRePW} onChange={handleInputRePW} autocomplete="new-password"/>
         </div>
 
         <div>

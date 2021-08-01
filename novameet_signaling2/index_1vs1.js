@@ -14,7 +14,7 @@ let users = {};
 
 let socketToRoom = {};
 
-const maximum = process.env.MAXIMUM || 8;
+const maximum = 2;
 
 io.on('connection', socket => {
     socket.on('join_room', data => {
@@ -50,21 +50,24 @@ io.on('connection', socket => {
     });
 
     // 다른 user들에게 offer를 보냄 (자신의 RTCSessionDescription)
-    socket.on('offer', data => {
-        //console.log(data.sdp);
-        socket.to(data.offerReceiveID).emit('getOffer', {sdp: data.sdp, offerSendID: data.offerSendID, offerSendEmail: data.offerSendEmail});
+    socket.on('offer', sdp => {
+        console.log('offer: ' + socket.id);
+        // room에는 두 명 밖에 없으므로 broadcast 사용해서 전달
+        socket.broadcast.emit('getOffer', sdp);
     });
 
     // offer를 보낸 user에게 answer을 보냄 (자신의 RTCSessionDescription)
-    socket.on('answer', data => {
-        //console.log(data.sdp);
-        socket.to(data.answerReceiveID).emit('getAnswer', {sdp: data.sdp, answerSendID: data.answerSendID});
+    socket.on('answer', sdp => {
+        console.log('answer: ' + socket.id);
+        // room에는 두 명 밖에 없으므로 broadcast 사용해서 전달
+        socket.broadcast.emit('getAnswer', sdp);
     });
 
     // 자신의 ICECandidate 정보를 signal(offer 또는 answer)을 주고 받은 상대에게 전달
-    socket.on('candidate', data => {
-        //console.log(data.candidate);
-        socket.to(data.candidateReceiveID).emit('getCandidate', {candidate: data.candidate, candidateSendID: data.candidateSendID});
+    socket.on('candidate', candidate => {
+        console.log('candidate: ' + socket.id);
+        // room에는 두 명 밖에 없으므로 broadcast 사용해서 전달
+        socket.broadcast.emit('getCandidate', candidate);
     })
 
     // user가 연결이 끊겼을 때 처리
@@ -85,7 +88,7 @@ io.on('connection', socket => {
             }
         }
         // 어떤 user가 나갔는 지 room의 다른 user들에게 통보
-        socket.to(roomID).emit('user_exit', {id: socket.id});
+        socket.broadcast.to(room).emit('user_exit', {id: socket.id});
         console.log(users);
     })
 });

@@ -1,8 +1,20 @@
-import connectionPool from "./db.js";
+import connectionPool from "../db.js";
 import bcrypt from "bcrypt";
 import nodemailer from 'nodemailer'
 
 const pool = connectionPool;
+
+// 입력된 id 와 동일한 id 가 mysql 에 있는 지 확인
+const idExistCheckQuery = `
+SELECT *
+FROM user 
+WHERE user_id = ?
+`;
+
+const insertUserQuery = `
+INSERT INTO user(user_id, user_pw, user_displayname)
+VALUES (?,?,?)
+`;
 
 export const postLogin = async (req, res) => {
     // console.log(`Received Request Login, req : ${util.inspect(req)}`);
@@ -15,13 +27,6 @@ export const postLogin = async (req, res) => {
             return;
         } 
 
-        // 입력된 id 와 동일한 id 가 mysql 에 있는 지 확인
-        const idExistCheckQuery = `
-        SELECT *
-        FROM user 
-        WHERE user_id = ?
-        `
-        
         connection.query(idExistCheckQuery, user_id, function (err, row) {
             if (err) {
                 console.log(err);
@@ -53,6 +58,10 @@ export const postLogin = async (req, res) => {
                 }
             });
         });
+
+        if (connection) {
+            connection.release();
+        }
     });
 };
 
@@ -66,18 +75,6 @@ export const postRegister = async (req, res) => {
 
     pool.getConnection((err, connection) => {
         if (!err) {
-
-            // 아이디 이미 있는지 체크
-            const idExistCheckQuery = `
-            SELECT *
-            FROM user 
-            WHERE user_id = ?
-            `
-            const insertUserQuery = `
-            INSERT INTO user(user_id, user_pw, user_displayname)
-            VALUES (?,?,?)
-            `;
-
             connection.query(idExistCheckQuery, user_id, (err, row) => {
                 if (!err) {
                     if (row.length > 0) {
@@ -110,6 +107,10 @@ export const postRegister = async (req, res) => {
         } else {
             console.log(`Connection Error : ${err}`);
         }
+
+        if (connection) {
+            connection.release();
+        }
     })
 };
 
@@ -121,32 +122,58 @@ export const postEmailAuth = async (req, res) => {
     console.log(`received postEmailAuth, 
     user_email:${user_email}, auth_number:${auth_number}`);
 
-    let transporter = nodemailer.createTransport({
-      service: 'gmail',
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: "pompitzgeneral@gmail.com",
-        pass: "dksk15315311!!"
-      },
-    });
-    
-    let mailOptions = {
-      from: `pompitzgeneral.gmail.com`,
-      to: user_email,
-      subject: `Nova Meet 인증번호입니다.`,
-      text: `인증번호 : ${auth_number}`
-    }
-    
-    transporter.sendMail(mailOptions, function (error, info) {
-      if (error) {
-        console.log(`send mail Failed ${error}`);
-        res.send({ responseCode: -1, msg: error });
-      } else {
-        console.log('Email sent: ' + info.response);
-        res.send({ responseCode: 1, msg: null });
-      }
-    });
+    pool.getConnection((err, connection) => {
+        if (!err) {
+            connection.query(idExistCheckQuery, user_email, (err, row) => {
+                if (!err) {
+                    if (row.length > 0) {
+                        console.log("already ID Exist");
+                        res.send({ responseCode: 0 });
+                    } else {
+                       sendEmail(res, user_email, auth_number);
+                    }
+                }
+            });
+        } else {
+            console.log(`Connection Error : ${err}`);
+        }
+
+        if (connection) {
+            connection.release();
+        }
+    })
 }
+
+ function sendEmail(res, emailAddress, authNumber) {
+    let transporter = nodemailer.createTransport({
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+          user: "pompitzgeneral@gmail.com",
+          pass: "dksk15315311!!"
+        },
+      });
+      
+      let mailOptions = {
+        from: `pompitzgeneral.gmail.com`,
+        to: emailAddress,
+        subject: `Nova Meet 인증번호입니다.`,
+        text: `인증번호 : ${authNumber}`
+      }
+      
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log(`send mail Failed ${error}`);
+          res.send({ responseCode: -1, msg: error });
+        } else {
+          console.log('Email sent: ' + info.response);
+          res.send({ responseCode: 1, msg: null });
+        }
+      });
+ }
+
+
+
 
