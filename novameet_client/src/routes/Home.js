@@ -4,7 +4,7 @@ import "routes/Home.css"
 import RoomContainerElement from "components/RoomContainerElement"
 import axios from 'axios';
 
-const Home = ({isLogin}) => {
+const Home = ({ isLoggedIn, userInfo }) => {
 
   const [loginID] = useState("");
   // room table 정보 : roomID, roomOwner, roomMemberCurrntCount, roomMemberMaxCount, roomImagePath
@@ -14,7 +14,8 @@ const Home = ({isLogin}) => {
       // 1. room 정보 요청 콜백 등록
       
       // 2. roomInfo에 데이터 업데이트(화면 갱신)
-      console.log(`home, isLogin:${isLogin}`);
+      console.log(`Home, isLoggedIn : ${isLoggedIn}`);
+      console.log(`Home, userInfo : ${userInfo}`);
 
       axios.post('/api/requestRoomInfos', null, null)
         .then(res => {
@@ -79,17 +80,10 @@ const showPleaseLogin = () => {
         <div className="rooms__container">
           {
           roomInfos.map((roomInfo) => (
-              //Todo. 조건식 링크로 처리하기
-              // <Link  
-              // key={roomInfo.roomID} 
-              // to={`/ChatRoom/${roomInfo.roomID}`}
-              // onClick={isLogin ? () => { if (roomInfo.hasPassword) checkRoomPassword(roomInfo) } : showPleaseLogin}>
-              //     <RoomContainerElement roomInfo={roomInfo}/>
-              // </Link>
               <RoomContainerElement 
               key={roomInfo.roomID} 
               roomInfo={roomInfo}
-              onClickCallBack={isLogin ? () => { requestJoinRoom(roomInfo) } : showPleaseLogin}/>
+              onClickCallBack={isLoggedIn ? () => { requestJoinRoom(roomInfo) } : showPleaseLogin}/>
           ))}
         </div>
       </div>

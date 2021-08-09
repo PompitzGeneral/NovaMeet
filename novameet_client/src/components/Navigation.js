@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "components/Navigation.css"
 
-const Navigation = ({ isLogin }) => {
+const Navigation = ({ isLoggedIn, userInfo }) => {
 
-  console.log(`Nav, isLogin : ${isLogin}`);
+  useEffect(() => {
+    console.log(`Navigation, isLoggedIn : ${isLoggedIn}`);
+    console.log(`Navigation, userInfo : ${userInfo}`);
+ }, []);
 
   return (
   <div className="sidebar">

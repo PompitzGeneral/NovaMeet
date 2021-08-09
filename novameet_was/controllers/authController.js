@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer'
 const pool = connectionPool;
 
 // 입력된 id 와 동일한 id 가 mysql 에 있는 지 확인
-const idExistCheckQuery = `
+const emailExistCheckQuery = `
 SELECT *
 FROM user 
 WHERE user_id = ?
@@ -27,7 +27,8 @@ export const postLogin = async (req, res) => {
             return;
         } 
 
-        connection.query(idExistCheckQuery, user_id, function (err, row) {
+        connection.query(emailExistCheckQuery, user_id, function (err, row) {
+            connection.release();
             if (err) {
                 console.log(err);
                 res.send(err);
@@ -51,19 +52,28 @@ export const postLogin = async (req, res) => {
             bcrypt.compare(user_pw, row[0].user_pw, (error, result) => {
                 if (result) {
                     console.log(`${row[0].user_id}:패스워드 일치 로그인 성공`);
-                    res.send({ user_id: row[0].user_id, user_displayname: row[0].user_displayname, msg: result });
+                    console.log(req.session);
+                    req.session.logined = true;
+                    req.session.user_id = row[0].user_id;
+                    res.send({ user_id: row[0].user_id, user_displayname: row[0].user_displayname, user_image: null, msg: result });
                 } else {
                     console.log(`로그인 실패, error message : ${error}`);
-                    res.send({ user_id: null, user_displayname: null, msg: error });
+                    res.send({ user_id: null, user_displayname: null, user_image: null, msg: error });
                 }
             });
         });
-
-        if (connection) {
-            connection.release();
-        }
     });
 };
+
+export const postLogout = async (req, res) => { 
+    console.log("postLogout");
+    console.log(req.session);
+    // req.session.destroy();
+    await req.session.destroy((err) => {
+        console.log(`session Destroyed`);
+    });
+    res.send({responseCode: 1});
+}
 
 export const postRegister = async (req, res) => {
     // console.log(`Received Request register, req : ${util.inspect(req)}`);
@@ -74,43 +84,48 @@ export const postRegister = async (req, res) => {
     const user_displayname = req.query.user_displayname;
 
     pool.getConnection((err, connection) => {
-        if (!err) {
-            connection.query(idExistCheckQuery, user_id, (err, row) => {
-                if (!err) {
-                    if (row.length > 0) {
-                        console.log("already ID Exist");
-                        res.send({ responseCode: 0 });
-                    } else {
-                        /*
-                        Todo 닉네임 검사 추가
-                        (현재 콜백 뎁스가 높아서 코드가 더러우니, 추후 MariaDB 동기 처리 검토 후 기능 추가)
-                        */
-                        const params = [user_id, user_pw, user_displayname];
-
-                        const saltRount = 10;
-                        bcrypt.hash(params[1], saltRount, (error,hash) => {
-                            params[1] = hash;
+        if (err) {
+            console.log(err);
+            res.send(err);
+            return;
+        }
+        
+        connection.query(emailExistCheckQuery, user_id, (err, row) => {            
+            if (err) {
+                console.log(err);
+                res.send(err);
+                return;
+            }
             
-                            connection.query(insertUserQuery, params, (err, row) => {
-                                if (!err) {
-                                    console.log("registrationSuccess");
-                                    res.send({responseCode: 1});
-                                } else {
-                                    console.log("registrationFailed");
-                                    res.send({responseCode: -1});
-                                }
-                            });
-                        });
-                    }
-                } 
-            });
-        } else {
-            console.log(`Connection Error : ${err}`);
-        }
+            if (row.length > 0) {
+                console.log("already ID Exist");
+                res.send({ responseCode: 0 });
+                connection.release();
+                return;
+            }
 
-        if (connection) {
-            connection.release();
-        }
+            /*
+               Todo 닉네임 검사 추가
+               (현재 콜백 뎁스가 높아서 코드가 더러우니, 추후 MariaDB 동기 처리 검토 후 기능 추가)
+               */
+            const params = [user_id, user_pw, user_displayname];
+
+            const saltRount = 10;
+            bcrypt.hash(params[1], saltRount, (error, hash) => {
+                params[1] = hash;
+
+                connection.query(insertUserQuery, params, (err, row) => {
+                    connection.release();
+                    if (!err) {
+                        console.log("registrationSuccess");
+                        res.send({ responseCode: 1 });
+                    } else {
+                        console.log("registrationFailed");
+                        res.send({ responseCode: -1 });
+                    }
+                });
+            });
+        });
     })
 };
 
@@ -119,50 +134,61 @@ export const postEmailAuth = async (req, res) => {
     const user_email = req.query.user_email;
     const auth_number = req.query.auth_number;
     
-    console.log(`received postEmailAuth, 
-    user_email:${user_email}, auth_number:${auth_number}`);
+    console.log(`received postEmailAuth, user_email:${user_email}, auth_number:${auth_number}`);
 
+
+    
+
+    let start = new Date().getTime();  
     pool.getConnection((err, connection) => {
-        if (!err) {
-            connection.query(idExistCheckQuery, user_email, (err, row) => {
-                if (!err) {
-                    if (row.length > 0) {
-                        console.log("already ID Exist");
-                        res.send({ responseCode: 0 });
-                    } else {
-                       sendEmail(res, user_email, auth_number);
-                    }
-                }
-            });
-        } else {
-            console.log(`Connection Error : ${err}`);
+        if (err) {
+            console.log(err);
+            res.send(err);
+            return;
         }
-
-        if (connection) {
+        connection.query(emailExistCheckQuery, user_email, (err, row) => {
             connection.release();
-        }
+            let end = new Date().getTime();
+            console.log(`이메일 체크 쿼리 소요시간  : ${(end - start)}ms`);
+
+            if (err) {
+                console.log(err);
+                res.send(err);
+                return;
+            }
+
+            if (row.length > 0) {
+                console.log("already ID Exist");
+                res.send({ responseCode: 0 });
+            } else {
+                sendEmail(res, user_email, auth_number);
+            }
+        });
     })
 }
 
  function sendEmail(res, emailAddress, authNumber) {
-    let transporter = nodemailer.createTransport({
-        service: 'gmail',
-        host: 'smtp.gmail.com',
+
+    const mailConfig = {
+        service: process.env.MAIL_SERVICE,
+        host: process.env.MAIL_HOST,
         port: 587,
-        secure: false,
         auth: {
-          user: "pompitzgeneral@gmail.com",
-          pass: "dksk15315311!!"
-        },
-      });
-      
-      let mailOptions = {
-        from: `pompitzgeneral.gmail.com`,
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS
+        }
+      }
+
+    let mailOptions = {
+        from: process.env.MAIL_USER,
         to: emailAddress,
         subject: `Nova Meet 인증번호입니다.`,
         text: `인증번호 : ${authNumber}`
       }
+
       
+      let transporter = nodemailer.createTransport(mailConfig);
+      const start = new Date().getTime(); 
       transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
           console.log(`send mail Failed ${error}`);
@@ -171,6 +197,8 @@ export const postEmailAuth = async (req, res) => {
           console.log('Email sent: ' + info.response);
           res.send({ responseCode: 1, msg: null });
         }
+        const end = new Date().getTime();
+        console.log(`메일 전송 메서드 실행시간  : ${(end-start)}ms`);
       });
  }
 

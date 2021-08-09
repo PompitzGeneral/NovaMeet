@@ -1,48 +1,53 @@
 import React, { useState, useEffect } from "react";
 import AppRouter from "components/Router";
-import Header from "components/Header";
+import axios from 'axios';
 import "components/App.css"
 
 function App() {
 
-  // 로그인 상태 관리
-  const [isLogin, setIsLogin] = useState(false);
-  const [userInfo, setUserInfo] = useState({
-    email:'',
-    displayName:'' 
-    });
+  const [init, setInit] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
 
   useEffect(() => {
-    const userEmail = sessionStorage.getItem('user_id');
-    if (sessionStorage.getItem('user_id') === null) {
-    // if (localStorage.getItem('user_id') === null) {
-      // sessionStorage 에 user_id 라는 key 값으로 저장된 값이 없다면
-      console.log('App - useEffect(sessionStorage.getItem === null), isLogin : ', isLogin);
+    // 1. 유저 정보 요청
+    console.log("app.js useEffect");
+    
+    refreshUserInfo();
+  }, []);
 
-    } else {
-      // sessionStorage 에 user_id 라는 key 값으로 저장된 값이 있다면
-      // 로그인 상태 변경
-      setIsLogin(true);
+  const refreshUserInfo = () => { 
+    console.log(`refreshUserInfo`);
 
-      if ((userInfo.email !== userEmail) || (userInfo.displayName !== userEmail)) {
-        setUserInfo({
-          email: userEmail,
-          displayName: userEmail
-        });
-      }
+    axios.post('/api/requestUserInfo', null, null)
+    .then(res => {
+      // 2. 유저 정보 수신
+      // email, displayName, image
+      console.log(`res.data.userInfo : `);
+      console.log(res.data.userInfo);
       
-      console.log('App - useEffect(sessionStorage.getItem !== null), isLogin : ', isLogin);
-      console.log('App - useEffect(sessionStorage.getItem !== null), userInfo : ');
-      console.log(userInfo);
-    }
-  })
+      // 3. 유저 정보 갱신
+      setUserInfo(res.data.userInfo);
+      setInit(true);
+    })
+   .catch((e) => {
+     console.log(e);
+     setUserInfo(null);
+     setInit(true);
+   });
+  };
 
   return (
     <>
-    {console.log(`App Rendered, isLogin : ${isLogin}`)}
-        {/* <Header isLogin={isLogin}/> */}
-        <AppRouter isLogin={isLogin} userInfo={userInfo}/>
-      {/* <footer> &copy; {new Date().getFullYear()} NovaMeet Footer </footer> */}
+    {
+      init ? (
+        <AppRouter
+          isLoggedIn={Boolean(userInfo)}
+          userInfo={userInfo}
+          refreshUserInfo={refreshUserInfo}
+        />
+      ) : (
+        "Initializing..."
+      )}
     </>
   );
 }

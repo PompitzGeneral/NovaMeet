@@ -72,7 +72,7 @@ const Register = () => {
   };
 
   //Todo. 특수문자 추가
-  //닉네임 유효성 검사 함수(영문,숫자 2~30)
+  //닉네임 유효성 검사 함수(문자,숫자 2~30)
   const checkDisplayNamePattern = (str) => {
     var reg_displayname = /^[가-힣]{2,30}|[a-zA-Z]{2,30}\s|[a-zA-Z]{2,30}$/;
     return reg_displayname.test(str) ? true : false;
@@ -84,7 +84,9 @@ const Register = () => {
     const randNum = Math.random().toString().substr(2, 6);
 
     console.log(`Email Auth Button Clicked, user_email:${inputEmail}, auth_number:${randNum}`);
-
+  
+    // 시작시간 체크
+    let start = new Date().getTime();  
     axios.post('/api/emailAuth', null, {
       params: {
         'user_email': inputEmail,
@@ -93,8 +95,11 @@ const Register = () => {
     })
       .then(res => {
         console.log(res);
+        // 종료시간 체크
+        let end = new Date().getTime(); 
+        console.log(`이메일 인증번호 발송 요청-응답 소요시간 : ${(end-start)}ms`); 
         if (res.data.responseCode === 1) {
-          alert('입력된 이메일 주소로 인증번호를 발송했습니다.');
+          alert(`입력된 이메일 주소로 인증번호를 발송했습니다.`);
           setAuthNumber(randNum);
         } else if (res.data.responseCode === 0){
           alert(`이미 사용중인 이메일 주소입니다.`);
@@ -151,7 +156,6 @@ const Register = () => {
         return;
       }
 
-      // Todo. ID중복, 닉네임 중복 처리
       // 유효성 검사 통과하면 서버에 등록 요청
       axios.post('/api/register', null, {
         params: {
@@ -197,11 +201,23 @@ const Register = () => {
         </div>
         <div>
           <label htmlFor='input_pw'>패스워드</label>
-          <input type='password' className='textInput' value={inputPW} onChange={handleInputPW} autocomplete="new-password"/>
+          {/* autocomplete="new-password" */}
+          <input type='password' className='textInput' value={inputPW} onChange={handleInputPW} inputProps={{
+                  autocomplete: 'new-password',
+                  form: {
+                    autocomplete: 'off',
+                  },
+                }}/>
         </div>
         <div>
           <label htmlFor='input_pw'>패스워드 확인</label>
-          <input type='password' className='textInput' value={inputRePW} onChange={handleInputRePW} autocomplete="new-password"/>
+          {/* autocomplete="new-password" */}
+          <input type='password' className='textInput' value={inputRePW} onChange={handleInputRePW} inputProps={{
+                  autocomplete: 'new-password',
+                  form: {
+                    autocomplete: 'off',
+                  },
+                }}/>
         </div>
 
         <div>

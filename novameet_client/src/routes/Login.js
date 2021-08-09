@@ -60,6 +60,7 @@ const Login = () => {
     })
       .then(res => {
         console.log(res);
+        console.log(res.session);
         console.log(`res.data.user_id : ${res.data.user_id}`);
         console.log(`res.data.user_displayname : ${res.data.user_displayname}`);
         console.log(`res.data.msg : ${res.data.msg}`);
@@ -72,10 +73,10 @@ const Login = () => {
           alert('패스워드를 확인해 주세요');
         } else if (res.data.user_id === inputID) {
           console.log('======================', '로그인 성공');
-          sessionStorage.setItem('user_id', inputID);
-          // localStorage.setItem('user_id', inputID);
+
           // 작업 완료 되면 페이지 이동(새로고침)
 
+          // document.location.href = '/#/';
           document.location.href = '/';
         } else {
           console.log('======================', '로그인 else');
