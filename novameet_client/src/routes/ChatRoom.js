@@ -1,22 +1,33 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useHistory, useLocation, useParams } from "react-router-dom";
 import io from 'socket.io-client';
 import Video from 'components/Video';
+import Chat from 'components/Chat/Chat';
 import "routes/ChatRoom.css"
+import Grid from '@material-ui/core/Grid';
+import { makeStyles } from '@material-ui/core/styles';
 
 const ChatRoom = () => {
 
   const [socket, setSocket] = useState("");
   const [users, setUsers] = useState([]);
-  
-  let localVideoRef  = useRef(null);
+  const history = useHistory();
+  const location = useLocation();
 
-  // socketID : RTCPeerConnection map
-  // let pcs: { [socketId: string]: RTCPeerConnection };
+  console.log("location:", location);
+
+  let userInfo = undefined;
+  if (location.state) {
+    userInfo = location.state.userInfo;
+  }
+
+  let localVideoRef  = useRef(null);
   let pcs = null;
 
   let {roomID} = useParams();
-  console.log(useParams());
+
+  console.log("ChatRoom UserInfo:", userInfo);
+  console.log("ChatRoom Params:",useParams());
   
   const pc_config = {
     "iceServers": [
@@ -30,8 +41,13 @@ const ChatRoom = () => {
       }
     ]
   }
-  
+
   useEffect(() => {
+    console.log("char_room, userInfo : ", userInfo);
+    if (!userInfo) {
+       alert("로그인이 필요합니다.");
+       history.push('/Login');
+    }
 
     let newSocket = io.connect('https://www.novameet.ga:4001', {secure: true});
     //210730
@@ -54,7 +70,8 @@ const ChatRoom = () => {
               newSocket.emit('offer', {
                 sdp: sdp,
                 offerSendID: newSocket.id,
-                offerSendEmail: 'offerSendSample@sample.com',
+
+                offerSendEmail: userInfo.userDisplayName,
                 offerReceiveID: allUsers[i].id
               });
             })
@@ -140,7 +157,7 @@ const ChatRoom = () => {
 
       localStream = stream;
 
-      newSocket.emit('join_room', {room: roomID, email: 'sample@naver.com'});
+      newSocket.emit('join_room', {room: roomID, email: userInfo.userDisplayName});
     }).catch(error => {
       console.log(`getUserMedia error: ${error}`);
     });
@@ -208,30 +225,80 @@ const ChatRoom = () => {
     return pc;
   }
 
-  // 본인과 상대방의 video 렌더링
+  const useStyles = makeStyles((theme) => ({
+    root: {
+      flexGrow: 1,
+      padding: 10
+    },
+  }));
+  
+  const classes = useStyles();
+
+  
   return (
-    <div>
-      <video
-        style={{
-          width: 210, //240
-          height: 210, //240
-          margin: 5,
-          backgroundColor: 'black'
-        }}
-        muted
-        ref={localVideoRef}
-        autoPlay>
-      </video>
-      {users.map((user, index) => {
-        return (
-          <Video
-            key={index}
-            email={user.email}
-            stream={user.stream}
-          />
-        );
-      })}
-    </div>
+    <>
+      <div className={classes.root}>
+        {/* <Grid container spacing={2}>
+          <Grid item lg={3} md={4} sm={6} xs={12}>
+            <video
+              className="video"
+              muted
+              ref={localVideoRef}
+              autoPlay>
+            </video>
+            <p>{userInfo.userDisplayName}</p>
+          </Grid>
+          {users.map((user, index) => {
+            return (
+              <Grid item lg={3} md={4} sm={6} xs={12}>
+                <Video
+                  key={index}
+                  displayName={user.email}
+                  stream={user.stream}
+                />
+              </Grid>
+            );
+          })}
+        </Grid> */}
+        <Grid container spacing={2}>
+          <Grid item>
+            <video
+              className="video"
+              muted
+              ref={localVideoRef}
+              autoPlay>
+            </video>
+            <p>{userInfo.userDisplayName}</p>
+          </Grid>
+          {users.map((user, index) => {
+            return (
+              <Grid item>
+                <Video
+                  key={index}
+                  displayName={user.email}
+                  stream={user.stream}
+                />
+              </Grid>
+            );
+          })}
+        </Grid>
+      </div>
+      <div>
+        {
+          (userInfo && roomID) ? (
+            <Chat
+              userInfo={userInfo}
+              roomID={roomID} />
+          ) : (
+            <div>
+            </div>
+          )
+        }
+      </div>
+    </>
   );
+  
+
+  
 };
 export default ChatRoom;

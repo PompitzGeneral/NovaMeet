@@ -39,7 +39,7 @@ router.route("/register").post(postRegister);
 router.route("/emailAuth").post(postEmailAuth);
 
 router.route("/requestRoomInfos").post(postRequestRoomInfos);
-router.route("/createRoom").post(roomImageUpload.single("file"), postCreateRoom);
+router.route("/createRoom").post(roomImageUpload.single("roomThumbnail"), postCreateRoom);
 router.route("/joinRoom").post(postJoinRoom);
 
 export default router;

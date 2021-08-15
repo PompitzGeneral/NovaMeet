@@ -2,7 +2,7 @@
 novameet_client/node_modules
 novameet_was/node_modules
 novameet_signaling/node_modules
-novameet_signaling2/node_modules
+novameet_chatServer/node_modules
 
 novameet_was/.env
 novameet_was/s3config.json

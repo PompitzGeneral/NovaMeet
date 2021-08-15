@@ -2,8 +2,20 @@ import connectionPool from "../db.js";
 
 const pool = connectionPool;
 
+//room_owner_image_url
 const selectRoomInfosQuery = `
-SELECT room_id, room_password, room_owner, room_member_current_count, room_member_max_count, room_image_path
+SELECT 
+room_id, 
+room_password, 
+room_owner, (
+    SELECT user_image_url
+    FROM user
+    WHERE user.user_id = rooms.room_owner
+) as room_owner_image_url, 
+room_member_current_count,
+room_member_max_count, 
+room_thumbnail_url,
+room_thumbnail_key
 FROM rooms
 `;
 
@@ -14,12 +26,12 @@ WHERE room_id = ?
 `;
 
 const insertRoomQuery = `
-INSERT INTO rooms(room_id, room_owner, room_image_path, room_password, room_member_max_count)
-VALUES (?,?,?,?,?)
+INSERT INTO rooms(room_id, room_owner, room_thumbnail_url, room_thumbnail_key, room_password, room_member_max_count)
+VALUES (?,?,?,?,?,?)
 `;
 
 export const postRequestRoomInfos = async (req, res) => {
-    console.log(`received postRequestRoomInfos`);
+    console.log(`Received postRequestRoomInfos`);
 
     // 1. 쿼리로 방 정보 가져오고
     pool.getConnection((err, connection) => {
@@ -46,9 +58,10 @@ export const postRequestRoomInfos = async (req, res) => {
                     roomID: data.room_id,
                     hasPassword: hasPassword,
                     roomOwner: data.room_owner,
+                    roomOwnerImageUrl: data.room_owner_image_url,
                     roomMemberCurrentCount: data.room_member_current_count,
                     roomMemberMaxCount: data.room_member_max_count,
-                    roomImagePath: data.room_image_path
+                    roomThumbnailUrl: data.room_thumbnail_url,
                 });
             }
 
@@ -62,18 +75,18 @@ export const postRequestRoomInfos = async (req, res) => {
 
 export const postCreateRoom = async (req, res) => {
 
-    const roomID = req.query.roomID;
-    const roomOwner = req.query.roomOwner;
-    const roomImage = req.query.roomImage;
-    const roomPassword = req.query.roomPassword;
-    const roomMemberMaxCount = req.query.roomMemberMaxCount;
+    console.log(`Received postCreateRoom`);
+    console.log(`req.file:`, req.file);
+    console.log(`req.body:`, req.body);
+    console.log(`-----------------------`);
 
-    console.log(`received postCreateRoom, 
-    roomID:${roomID}, 
-    roomOwner:${roomOwner}, 
-    roomImage:${roomImage}, 
-    roomPassword:${roomPassword}, 
-    roomMemberMaxCount:${roomMemberMaxCount}`);
+    // Todo. 전달 방식 변경
+    const roomID = req.body.roomID;
+    const roomOwner = req.body.roomOwner;
+    const roomThumbnailUrl = req.file ? req.file.location : null;
+    const roomThumbnailKey = req.file ? req.file.key : null;
+    const roomPassword = req.body.roomPassword;
+    const roomMemberMaxCount = req.body.roomMemberMaxCount;
 
     pool.getConnection((err, connection) => {
         if (err) {
@@ -94,7 +107,7 @@ export const postCreateRoom = async (req, res) => {
                 console.log("already roomID Exist");
                 res.send({ responseCode: 0 });
             } else {
-                const params = [roomID, roomOwner, roomImage, roomPassword, roomMemberMaxCount];
+                const params = [roomID, roomOwner, roomThumbnailUrl, roomThumbnailKey, roomPassword, roomMemberMaxCount];
 
                 connection.query(insertRoomQuery, params, (err, row) => {
                     if (!err) {
@@ -139,7 +152,6 @@ export const postJoinRoom = async (req, res) => {
                 const roomOwner = row[0].room_owner;
                 const roomMemberCurrentCount = row[0].room_member_current_count;
                 const roomMemberMaxCount = row[0].room_member_max_count;
-                const roomImagePath = row[0].room_image_path;
 
                 // 2. 방 인원수 체크
                 if (roomMemberCurrentCount >= roomMemberMaxCount) {

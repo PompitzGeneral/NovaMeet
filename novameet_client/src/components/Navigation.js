@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "components/Navigation.css"
 
 const Navigation = ({ isLoggedIn, userInfo }) => {
@@ -8,6 +8,12 @@ const Navigation = ({ isLoggedIn, userInfo }) => {
     console.log(`Navigation, isLoggedIn : ${isLoggedIn}`);
     console.log(`Navigation, userInfo : ${userInfo}`);
  }, []);
+
+  const {pathname} = useLocation();
+
+  if (pathname.includes('/Chatroom')) {
+    return null;
+  }
 
   return (
   <div className="sidebar">

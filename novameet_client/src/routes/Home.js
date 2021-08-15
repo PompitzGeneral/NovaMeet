@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {Link} from 'react-router-dom';
+import {useHistory } from 'react-router-dom';
 import "routes/Home.css"
 import RoomContainerElement from "components/RoomContainerElement"
 import axios from 'axios';
@@ -9,6 +9,7 @@ const Home = ({ isLoggedIn, userInfo }) => {
   const [loginID] = useState("");
   // room table 정보 : roomID, roomOwner, roomMemberCurrntCount, roomMemberMaxCount, roomImagePath
   const [roomInfos, setRoomInfos] = useState([]);
+  const history = useHistory();
 
   useEffect(() => {
       // 1. room 정보 요청 콜백 등록
@@ -47,7 +48,7 @@ const requestJoinRoom = (roomInfo) => {
       .then(res => {
         console.log(`received joinRoom. responseCode:${res.data.responseCode}`);
         if (res.data.responseCode === 1) {
-          document.location.href = `/#/Chatroom/${roomInfo.roomID}`;
+          history.push({pathname:`/Chatroom/${roomInfo.roomID}`, state: {userInfo: userInfo}});
         } else if (res.data.responseCode === 0) {
           alert("참여 가능한 인원수가 다 찼습니다.");
         } else if (res.data.responseCode === -1) {
@@ -84,6 +85,7 @@ const showPleaseLogin = () => {
               key={roomInfo.roomID} 
               roomInfo={roomInfo}
               onClickCallBack={isLoggedIn ? () => { requestJoinRoom(roomInfo) } : showPleaseLogin}/>
+              // onClickCallBack={isLoggedIn ? () => { requestJoinRoom(roomInfo) } : showPleaseLogin}/>
           ))}
         </div>
       </div>

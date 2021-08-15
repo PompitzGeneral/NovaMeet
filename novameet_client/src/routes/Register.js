@@ -131,6 +131,7 @@ const Register = () => {
 
       console.log(`test2 authNumber:${authNumber}`);
 
+      /*
       if (!inputEmailAuth) {
         alert("이메일 인증 번호를 입력해 주세요");
         return;
@@ -154,7 +155,7 @@ const Register = () => {
       if (!checkDisplayNamePattern(inputDisplayName)) {
         alert("닉네임 형식이 유효하지 않습니다.(한글,영문 2~30자)");
         return;
-      }
+      }*/
 
       // 유효성 검사 통과하면 서버에 등록 요청
       axios.post('/api/register', null, {
