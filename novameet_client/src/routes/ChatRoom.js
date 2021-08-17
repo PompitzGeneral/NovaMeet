@@ -5,10 +5,16 @@ import Video from 'components/Video';
 import Chat from 'components/Chat/Chat';
 import "routes/ChatRoom.css"
 import Grid from '@material-ui/core/Grid';
+import ChatRoomBottom from "components/ChatRoomBottom"
+import Avatar from '@material-ui/core/Avatar';
+
 import { makeStyles } from '@material-ui/core/styles';
 
 const ChatRoom = () => {
 
+  const [isShowMyAvatar, setIsShowMyAvatar] = useState(false);
+  const [isShowedMember, setIsShowedMember] = useState(false);
+  const [isShowedChat, setIsShowedChat] = useState(false);
   const [socket, setSocket] = useState("");
   const [users, setUsers] = useState([]);
   const history = useHistory();
@@ -70,7 +76,6 @@ const ChatRoom = () => {
               newSocket.emit('offer', {
                 sdp: sdp,
                 offerSendID: newSocket.id,
-
                 offerSendEmail: userInfo.userDisplayName,
                 offerReceiveID: allUsers[i].id
               });
@@ -225,6 +230,27 @@ const ChatRoom = () => {
     return pc;
   }
 
+  const setVideoTrack = (enabled) => {
+    console.log(`setVideoTrack(${enabled})`);
+    const myStream = localVideoRef.current.srcObject;
+    if (myStream) {
+      myStream
+        .getVideoTracks()
+        .forEach((track) => (track.enabled = enabled));
+    }
+    setIsShowMyAvatar(!enabled)
+  };
+
+  const setAudioTrack = (enabled) => {
+    console.log(`setAudioTrack(${enabled})`);
+    const myStream = localVideoRef.current.srcObject;
+    if (myStream) {
+      myStream
+        .getAudioTracks()
+        .forEach((track) => (track.enabled = enabled));
+    }
+  };
+
   const useStyles = makeStyles((theme) => ({
     root: {
       flexGrow: 1,
@@ -234,40 +260,16 @@ const ChatRoom = () => {
   
   const classes = useStyles();
 
-  
   return (
     <>
       <div className={classes.root}>
-        {/* <Grid container spacing={2}>
-          <Grid item lg={3} md={4} sm={6} xs={12}>
-            <video
-              className="video"
-              muted
-              ref={localVideoRef}
-              autoPlay>
-            </video>
-            <p>{userInfo.userDisplayName}</p>
-          </Grid>
-          {users.map((user, index) => {
-            return (
-              <Grid item lg={3} md={4} sm={6} xs={12}>
-                <Video
-                  key={index}
-                  displayName={user.email}
-                  stream={user.stream}
-                />
-              </Grid>
-            );
-          })}
-        </Grid> */}
         <Grid container spacing={2}>
-          <Grid item>
-            <video
+          <Grid item >
+              <video
               className="video"
               muted
               ref={localVideoRef}
-              autoPlay>
-            </video>
+              autoPlay></video>      
             <p>{userInfo.userDisplayName}</p>
           </Grid>
           {users.map((user, index) => {
@@ -285,7 +287,19 @@ const ChatRoom = () => {
       </div>
       <div>
         {
-          (userInfo && roomID) ? (
+          (userInfo && roomID && isShowedMember) ? (
+            <Members
+              userInfo={userInfo}
+              roomID={roomID} />
+          ) : (
+            <div>
+            </div>
+          )
+        }
+      </div>
+      <div>
+        {
+          (userInfo && roomID && isShowedChat) ? (
             <Chat
               userInfo={userInfo}
               roomID={roomID} />
@@ -295,10 +309,15 @@ const ChatRoom = () => {
           )
         }
       </div>
+      <div className="bottom">
+        <ChatRoomBottom
+          setVideoTrack={setVideoTrack}
+          setAudioTrack={setAudioTrack} 
+          setIsShowedMember={setIsShowedMember}
+          setIsShowedChat={setIsShowedChat}
+          />
+      </div>
     </>
   );
-  
-
-  
 };
 export default ChatRoom;

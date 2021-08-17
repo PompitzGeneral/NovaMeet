@@ -11,7 +11,7 @@ function App() {
   useEffect(() => {
     // 1. 유저 정보 요청
     console.log("app.js useEffect");
-    
+    console.log("app.js useEffect");
     refreshUserInfo();
   }, []);
 

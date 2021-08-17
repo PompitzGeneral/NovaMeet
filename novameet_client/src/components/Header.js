@@ -42,6 +42,7 @@ const Header = ({ isLoggedIn, userInfo }) => {
   const createRoom = (roomName, roomThumbnail, roomPassword, roomMemberMaxCount) => {
     console.log("createRoom, userInfo : ");
     console.log(userInfo);
+    console.log("");
 
     // Todo. 전달 방식 변경
     axios.post('/api/createRoom', null, {
@@ -103,11 +104,6 @@ const Header = ({ isLoggedIn, userInfo }) => {
 
 
        <div className="header__icons">
-
-         {/* <i className="material-icons display-this">search</i>
-           <i className="material-icons">videocam</i>
-           <i className="material-icons">apps</i>
-           <i className="material-icons">notifications</i> */}
 
        </div>
        <div className="header__right">
