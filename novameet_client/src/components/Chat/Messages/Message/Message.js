@@ -5,9 +5,6 @@ import Avatar from '@material-ui/core/Avatar';
 // name -> 현재 접속한 유저
 // const Message = ({ message: { text, user }, name }) => {
 const Message = ({ message: { user, imageUrl, text }, name }) => {
-  console.log("In Message, user : ", user);
-  console.log("In Message, imageUrl : ", imageUrl);
-  console.log("In Message, text : ", text);
   let isSentByCurrentUser = false;
   const trimmedName = name.trim().toLowerCase();
   if (user === trimmedName) {

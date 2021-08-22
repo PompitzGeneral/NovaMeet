@@ -11,10 +11,11 @@ import ChatOutlinedIcon from '@material-ui/icons/ChatOutlined';
 import ChatBubbleOutlinedIcon from '@material-ui/icons/ChatBubbleOutlined';
 import PeopleIcon from '@material-ui/icons/People';
 import PeopleOutlineOutlinedIcon from '@material-ui/icons/PeopleOutlineOutlined';
+import RemoveCircleIcon from '@material-ui/icons/RemoveCircle';
 
 import { makeStyles } from '@material-ui/core/styles';
 
-const ChatRoomBottom = ({ setVideoTrack, setAudioTrack, setIsShowedMember, setIsShowedChat}) => {
+const ChatRoomBottom = ({ isRoomOwner, deleteRoomCallback, setVideoTrack, setAudioTrack, setIsShowedMember, setIsShowedChat}) => {
   // Camera
   const [isCameraBtnOn, setIsCameraBtnOn] = useState(true);
   // 음소거
@@ -28,14 +29,12 @@ const ChatRoomBottom = ({ setVideoTrack, setAudioTrack, setIsShowedMember, setIs
 
   const onCameraBtnClicked = () => {
     console.log("onCameraBtnClicked");
-
     setVideoTrack(!isCameraBtnOn);
     setIsCameraBtnOn(!isCameraBtnOn);
   }
 
   const onMuteBtnClicked = () => {
     console.log("onMuteBtnClicked");
-
     setAudioTrack(!isMuteBtnOn);
     setIsMuteBtnOn(!isMuteBtnOn);
   }
@@ -65,6 +64,11 @@ const ChatRoomBottom = ({ setVideoTrack, setAudioTrack, setIsShowedMember, setIs
   const onCallEndBtnClicked = () => {
     console.log("onCallEndBtnClicked");
     history.push('/');
+  }
+
+  const onDeleteRoomBtnClicked = () => {
+    console.log("onDeleteRoomBtnClicked");
+    deleteRoomCallback();
   }
 
   const useStyles = makeStyles((theme) => ({
@@ -129,6 +133,16 @@ const ChatRoomBottom = ({ setVideoTrack, setAudioTrack, setIsShowedMember, setIs
       <Fab className={classes.fab} color="secondary" variant="extended" onClick={onCallEndBtnClicked}>
         <CallEndIcon />
       </Fab>
+      {
+        isRoomOwner ? (
+          <Fab className={classes.fab} color="secondary" variant="extended" onClick={onDeleteRoomBtnClicked}>
+            <RemoveCircleIcon />
+          </Fab>
+        ) : (
+          <div>
+          </div>
+        )
+      }
     </div>
   );
 };

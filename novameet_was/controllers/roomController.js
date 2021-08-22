@@ -30,6 +30,11 @@ INSERT INTO rooms(room_id, room_owner, room_thumbnail_url, room_thumbnail_key, r
 VALUES (?,?,?,?,?,?)
 `;
 
+const deleteRoomQuery = `
+DELETE FROM rooms
+WHERE room_id = ?;
+`;
+
 export const postRequestRoomInfos = async (req, res) => {
     console.log(`Received postRequestRoomInfos`);
 
@@ -126,6 +131,7 @@ export const postCreateRoom = async (req, res) => {
 }
 
 export const postJoinRoom = async (req, res) => {
+    const userID = req.query.userID;
     const roomID = req.query.roomID;
     const inputPassword = req.query.inputPassword;
 
@@ -139,8 +145,8 @@ export const postJoinRoom = async (req, res) => {
             res.send(err);
             return;
         }
-         // 1. 전달받은 RoomID값을 갖는 Room을 찾는다
-         connection.query(roomExistCheckQuery, roomID, (err, row) => {
+        // 1. 전달받은 RoomID값을 갖는 Room을 찾는다
+        connection.query(roomExistCheckQuery, roomID, (err, row) => {
             connection.release();
             if (err) {
                 console.log(err);
@@ -160,17 +166,63 @@ export const postJoinRoom = async (req, res) => {
                     return;
                 }
                 // 3. 패스워드 체크
-                if (inputPassword === roomPassword) {
-                    // 방 입장 성공
-                    res.send({ responseCode: 1 });
+                if (roomPassword) {
+                    if (inputPassword === roomPassword) {
+                        // 방 입장 성공
+                        (userID === roomOwner) ? 
+                        res.send({ responseCode: 2 }) :
+                        res.send({ responseCode: 1 });
+                        
+                    } else {
+                        // 패스워드 인증 실패
+                        res.send({ responseCode: -1 });
+                    }
                 } else {
-                    // 패스워드 인증 실패
-                    res.send({ responseCode: -1 });
+                    // 방 입장 성공
+                    (userID === roomOwner) ? 
+                    res.send({ responseCode: 2 }) :
+                    res.send({ responseCode: 1 });
                 }
             } else {
                 // 해당하는 방이 없음
                 res.send({ responseCode: -2 });
             }
+        });
+    })
+}
+
+export const postDeleteRoom = async (req, res) => {
+    const roomID = req.query.roomID;
+
+    pool.getConnection((err, connection) => {
+        if (err) {
+            console.log(err);
+            res.send(err);
+            return;
+        }
+        connection.query(roomExistCheckQuery, roomID, (err, row) => {
+            if (err) {
+                console.log(err);
+                res.send(err);
+                connection.release();
+                return;
+            }
+            if (row.length > 0) {
+                connection.query(deleteRoomQuery, roomID, (err, row) => {
+                    if (!err) {
+                        console.log("room Delete Success");
+                        res.send({ responseCode: 1 });
+                    } else {
+                        console.log("room Delete Failed");
+                        console.log(err);
+                        res.send({ responseCode: -1 });
+                    }
+                });
+            } else {
+                // 방이 존재하지 않음
+                res.send({ responseCode: 0 });
+            }
+            connection.release();
         });
     })
 }

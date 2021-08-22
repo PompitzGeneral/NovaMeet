@@ -15,7 +15,7 @@ import CardContent from '@material-ui/core/CardContent';
 import "components/RoomCreationDlg.css"
 import axios from 'axios';
 
-const RoomCreationDlg = ({ userInfo, dlgIsOpen, createRoomCallBack, closeDlgCallBack }) => {
+const RoomCreationDlg = ({ userInfo, dlgIsOpen, closeDlgCallBack }) => {
   const [roomName, setRoomName] = useState('');
   const [currentFile, setCurrentFile] = useState(undefined);
   const [previewImage, setPreviewImage] = useState(undefined);
@@ -54,8 +54,6 @@ const RoomCreationDlg = ({ userInfo, dlgIsOpen, createRoomCallBack, closeDlgCall
     event.preventDefault();
     console.log("onSubmit");
 
-    //createRoomCallBack(roomName, currentFile, roomPassword, roomMemberMaxCount);
-
     let formData = new FormData();
 
     const config = {
@@ -79,8 +77,10 @@ const RoomCreationDlg = ({ userInfo, dlgIsOpen, createRoomCallBack, closeDlgCall
           console.log("방 생성 완료");
           alert('방 생성 완료');
           closeDlgCallBack();
-          // document.location.href = `/#/ChatRoom/${roomName}`;
-          history.push({pathname:`/Chatroom/${roomName}`, state: {userInfo: userInfo}});
+          history.push({
+            pathname:`/Chatroom/${roomName}`, 
+            state: {userInfo: userInfo, isRoomOwner: true}
+          });
         } else if (res.data.responseCode === 0) {
           alert('이미 같은 이름의 방이 존재합니다.');
         } else {

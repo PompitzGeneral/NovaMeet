@@ -4,8 +4,6 @@ import "./Input.css";
 import Button from "@material-ui/core/Button";
 
 const Input = ({ message, setMessage, sendMessage }) => (
-  //   return <div className="Input"></div>;
-  // <form className="inputForm">
   <div className="inputContainer">
     <input
       className="input"
@@ -23,6 +21,5 @@ const Input = ({ message, setMessage, sendMessage }) => (
       <i className="material-icons">send</i>
     </Button>
   </div>
-  // </form>
 );
 export default Input;

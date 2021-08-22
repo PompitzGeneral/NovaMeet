@@ -16,13 +16,14 @@ import {
   postLogin,
   postLogout,
   postRegister,
-  postEmailAuth,
+  postEmailAuth
 } from "./controllers/authController.js";
 
 import {
   postRequestRoomInfos,
   postCreateRoom,
-  postJoinRoom
+  postJoinRoom,
+  postDeleteRoom
 } from "./controllers/roomController.js";
 
 const router = express.Router();
@@ -41,5 +42,6 @@ router.route("/emailAuth").post(postEmailAuth);
 router.route("/requestRoomInfos").post(postRequestRoomInfos);
 router.route("/createRoom").post(roomImageUpload.single("roomThumbnail"), postCreateRoom);
 router.route("/joinRoom").post(postJoinRoom);
+router.route("/deleteRoom").post(postDeleteRoom);
 
 export default router;

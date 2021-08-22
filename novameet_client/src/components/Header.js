@@ -39,41 +39,6 @@ const Header = ({ isLoggedIn, userInfo }) => {
       .catch();
   }
 
-  const createRoom = (roomName, roomThumbnail, roomPassword, roomMemberMaxCount) => {
-    console.log("createRoom, userInfo : ");
-    console.log(userInfo);
-    console.log("");
-
-    // Todo. 전달 방식 변경
-    axios.post('/api/createRoom', null, {
-      params: {
-        'roomID': roomName,
-        'roomOwner': userInfo.displayName,
-        'roomThumbnail': roomThumbnail,
-        'roomPassword': roomPassword,
-        'roomMemberMaxCount': roomMemberMaxCount
-      }
-    })
-      .then(res => {
-        console.log(res);
-        console.log(`res.data.responseCode : ${res.data.responseCode}`);
-        if (res.data.responseCode === 1) {
-          console.log("방 생성 인자 userInfo : ", userInfo);
-          // console.log("방 생성 완료");
-          alert('방 생성 완료');
-          closeCreateRoomDlg();
-          
-          // document.location.href = `/#/ChatRoom/${roomName}`;
-          history.push({pathname:`/Chatroom/${roomName}`, state: {userInfo: userInfo}});
-        } else if (res.data.responseCode === 0) {
-          alert('이미 같은 이름의 방이 존재합니다.');
-        } else {
-          alert('방 생성 예외 케이스. Server Log 확인 필요');
-        }
-      })
-      .catch();
-  };
-
   const openCreateRoomDlg = () => { setDlgIsOpen(true); }
   const closeCreateRoomDlg = () => {
     //Todo. dlg unmount 시 state 초기화
@@ -113,7 +78,7 @@ const Header = ({ isLoggedIn, userInfo }) => {
                <i className="material-icons">add_circle_outline</i>
                <span>방 만들기</span>
              </div>
-             <RoomCreationDlg userInfo={userInfo} dlgIsOpen={dlgIsOpen} createRoomCallBack={createRoom} closeDlgCallBack={closeCreateRoomDlg} />
+             <RoomCreationDlg userInfo={userInfo} dlgIsOpen={dlgIsOpen} closeDlgCallBack={closeCreateRoomDlg} />
 
              <div className="header__right__element" onClick={onLogoutButtonClicked}>
                <i className="material-icons">logout</i>

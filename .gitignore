@@ -7,3 +7,5 @@ novameet_chatServer/node_modules
 novameet_was/.env
 novameet_was/s3config.json
 novameet_was/sessions
+
+novameet_chatServer/.env
