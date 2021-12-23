@@ -85,7 +85,6 @@ export const postCreateRoom = async (req, res) => {
     console.log(`req.body:`, req.body);
     console.log(`-----------------------`);
 
-    // Todo. 전달 방식 변경
     const roomID = req.body.roomID;
     const roomOwner = req.body.roomOwner;
     const roomThumbnailUrl = req.file ? req.file.location : null;
@@ -131,11 +130,12 @@ export const postCreateRoom = async (req, res) => {
 }
 
 export const postJoinRoom = async (req, res) => {
-    const userID = req.query.userID;
-    const roomID = req.query.roomID;
-    const inputPassword = req.query.inputPassword;
+    const userID = req.body.userID;
+    const roomID = req.body.roomID;
+    const inputPassword = req.body.inputPassword;
 
     console.log(`received postJoinRoom, 
+    userID:${userID}, 
     roomID:${roomID}, 
     inputPassword:${inputPassword}`);
 
@@ -161,6 +161,8 @@ export const postJoinRoom = async (req, res) => {
 
                 // 2. 방 인원수 체크
                 if (roomMemberCurrentCount >= roomMemberMaxCount) {
+                  console.log("roomMemberCurrentCount:",roomMemberCurrentCount);
+                  console.log("roomMemberMaxCount:",roomMemberMaxCount);
                     // 참여 가능한 인원수 다 찬 경우
                     res.send({ responseCode: 0 });
                     return;
@@ -192,7 +194,10 @@ export const postJoinRoom = async (req, res) => {
 }
 
 export const postDeleteRoom = async (req, res) => {
-    const roomID = req.query.roomID;
+    const roomID = req.body.roomID;
+
+    console.log(`received postDeleteRoom, 
+    roomID:${roomID}`);
 
     pool.getConnection((err, connection) => {
         if (err) {

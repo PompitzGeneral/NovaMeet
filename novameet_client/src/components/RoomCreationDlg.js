@@ -173,8 +173,8 @@ const RoomCreationDlg = ({ userInfo, dlgIsOpen, closeDlgCallBack }) => {
         <DialogActions>
           {/* color="primary" */}
           {/* variant= contained, outlined */}
-          <Button variant="outlined" color="primary" type="submit">생성</Button>
-          <Button variant="outlined" color="primary" onClick={closeDlgCallBack}>닫기</Button>
+          <Button variant="contained" color="primary" type="submit">생성</Button>
+          <Button variant="contained" color="primary" onClick={closeDlgCallBack}>닫기</Button>
         </DialogActions>
       </form>
     </Dialog>

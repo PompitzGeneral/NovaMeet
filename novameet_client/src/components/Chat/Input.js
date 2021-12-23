@@ -8,7 +8,7 @@ const Input = ({ message, setMessage, sendMessage }) => (
     <input
       className="input"
       type="text"
-      placeholder="모든 사용자에게 메시지 보내기"
+      placeholder="Enter Message"
       value={message}
       onChange={(e) => setMessage(e.target.value)}
       onKeyPress={(e) => (e.key === "Enter" ? sendMessage(e) : null)}

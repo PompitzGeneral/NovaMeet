@@ -52,30 +52,27 @@ const Login = () => {
       return;
     }
 
-    axios.post('/api/login', null, {
-      params: {
-        'user_id': inputID,
-        'user_pw': inputPW
-        }
-    })
+    axios.post('/api/login', {
+      'user_id': inputID,
+      'user_pw': inputPW
+      },
+      null
+    )
       .then(res => {
         console.log(res);
         console.log(res.session);
         console.log(`res.data.user_id : ${res.data.user_id}`);
         console.log(`res.data.user_displayname : ${res.data.user_displayname}`);
         console.log(`res.data.msg : ${res.data.msg}`);
-        if (res.data.user_id === undefined) {
+        if (res.data.responseCode === 0) {
           // id 일치하지 않는 경우 userId = undefined, msg = '입력하신 id 가 일치하지 않습니다.'
           console.log('======================', res.data.msg);
-          alert('Email가 존재하지 않습니다.');
-        } else if (res.data.user_id === null) {
+          alert('Email이 존재하지 않습니다.');
+        } else if (res.data.responseCode === -1) {
           console.log('======================', '패스워드를 확인해 주세요');
           alert('패스워드를 확인해 주세요');
-        } else if (res.data.user_id === inputID) {
+        } else if (res.data.responseCode === 1) {
           console.log('======================', '로그인 성공');
-
-          // 작업 완료 되면 페이지 이동(새로고침)
-
           // document.location.href = '/#/';
           document.location.href = '/';
         } else {

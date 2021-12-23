@@ -39,7 +39,6 @@ const Profile = ({ userInfo, refreshUserInfo }) => {
     const [userReNewPassword, setUserReNewPassword] = useState('');
 
     useEffect(() => {
-        // Todo. UserImage 받아오기
         setPreviewImage(userInfo.userImageUrl);
         setUserID(userInfo.userID);
         setUserDisplayName(userInfo.userDisplayName);
@@ -102,7 +101,7 @@ const Profile = ({ userInfo, refreshUserInfo }) => {
                     alert("회원정보가 정상적으로 변경되었습니다.");
                     console.log('Database 유저 정보 갱신 성공');
                 } else if (res.data.responseCode === 0) {
-                    alert("회원정보가 변경 실패.");
+                    alert("회원정보 변경 실패.");
                     console.log('Database 유저 정보 갱신 실패');
                 } else {
                     console.log('======================', 'unkwon');
@@ -124,13 +123,19 @@ const Profile = ({ userInfo, refreshUserInfo }) => {
             return;
         }
 
-        axios.post('/api/updateUserPassword', null, {
-            params: {
-                'user_id': userID,
-                'user_password': userCurrentPassword,
-                'user_new_password': userNewPassword
-            }
-        })
+        // axios.post('/api/updateUserPassword', null, {
+        //     params: {
+        //         'user_id': userID,
+        //         'user_password': userCurrentPassword,
+        //         'user_new_password': userNewPassword
+        //     }
+        // })
+        axios.post('/api/updateUserPassword', {
+            'user_id': userID,
+            'user_password': userCurrentPassword,
+            'user_new_password': userNewPassword
+        }, null
+        )
             .then(res => {
                 console.log(res);
                 if (res.data.responseCode === 1) {

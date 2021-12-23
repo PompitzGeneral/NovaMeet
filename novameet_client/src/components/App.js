@@ -21,7 +21,7 @@ function App() {
     axios.post('/api/requestUserInfo', null, null)
     .then(res => {
       // 2. 유저 정보 수신
-      // email, displayName, image
+      // userID, displayName, image
       console.log(`res.data.userInfo : `);
       console.log(res.data.userInfo);
       

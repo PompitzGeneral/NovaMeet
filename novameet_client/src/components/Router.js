@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { HashRouter as Router, Route, Switch } from "react-router-dom";
 import Home from "routes/Home";
 import Login from "routes/Login";
@@ -12,22 +12,30 @@ import Header from "components/Header";
 
 const AppRouter = ({isLoggedIn, userInfo, refreshUserInfo}) => {
    
-   useEffect(() => {
-      console.log(`Router, isLoggedIn : ${isLoggedIn}`);
-      console.log(`Router, userInfo : ${userInfo}`);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+      console.log(`[AppRouter], isLoggedIn : `, isLoggedIn);
+      console.log(`[AppRouter], userInfo : `, userInfo);
    }, []);
 
   return (
     <Router>
-       <Header isLoggedIn={isLoggedIn} userInfo={userInfo}/>
-       <div className="mainBody">
+      {
+        (isMobile) ? <></> : <Header isLoggedIn={isLoggedIn} userInfo={userInfo} />
+      }
+      <div className="mainBody">
       <Navigation isLoggedIn={isLoggedIn} userInfo={userInfo}/>
       <Switch>
          <Route exact path="/">
             <Home isLoggedIn={isLoggedIn} userInfo={userInfo}/>
          </Route>
          <Route exact path="/Record">
-            <Record/>
+            { (!isLoggedIn) ? <Login/> : <Record isLoggedIn={isLoggedIn} userInfo={userInfo} isMobile={false} setIsMobile={setIsMobile} /> } 
+         </Route><Route exact path="/MobileRecord">
+            { 
+              (!isLoggedIn) ? <Login/> : <Record isLoggedIn={isLoggedIn} userInfo={userInfo} isMobile={true} setIsMobile={setIsMobile}/> 
+            } 
          </Route>
          <Route exact path="/Register"> 
             { (!isLoggedIn) ? <Register/> : <Home isLoggedIn={isLoggedIn}/> } 
@@ -39,7 +47,7 @@ const AppRouter = ({isLoggedIn, userInfo, refreshUserInfo}) => {
             { (!isLoggedIn) ? <Login/> : <Profile userInfo={userInfo} refreshUserInfo={refreshUserInfo} />}    
          </Route>  
          <Route exact path="/ChatRoom/:roomID"> 
-            { (isLoggedIn) ? <ChatRoom/> : <Login/> }
+            { (isLoggedIn) ? <ChatRoom refreshUserInfo={refreshUserInfo} /> : <Login/> }
          </Route>     
       </Switch>
       </div>

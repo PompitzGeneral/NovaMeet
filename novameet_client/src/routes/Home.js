@@ -2,17 +2,20 @@ import React, { useState, useEffect } from "react";
 import {useHistory, useLocation } from 'react-router-dom';
 import "routes/Home.css"
 import RoomContainerElement from "components/RoomContainerElement"
+import RoomPasswordDlg from "components/RoomPasswordDlg"
 import axios from 'axios';
 
+let clickedRoomInfo = null
 const Home = ({ isLoggedIn, userInfo }) => {
 
   const [roomInfos, setRoomInfos] = useState([]);
+  const [dlgIsOpen, setDlgIsOpen] = useState(false);
   const history = useHistory();
   const location = useLocation();
 
   useEffect(() => {
-      console.log(`Home, isLoggedIn : ${isLoggedIn}`);
-      console.log(`Home, userInfo :`, userInfo);
+      console.log(`[Home] isLoggedIn : `, isLoggedIn);
+      console.log(`[Home] userInfo :`, userInfo);
 
       axios.post('/api/requestRoomInfos', null, null)
         .then(res => {
@@ -39,26 +42,22 @@ const Home = ({ isLoggedIn, userInfo }) => {
 
 const onRoomClicked = (roomInfo) => {
   const inputPassword = null;
+  clickedRoomInfo = roomInfo
   if (roomInfo.hasPassword) {
-    // 1. 패스워드 입력
-    const inputPassword = prompt('패스워드 입력');
-    if (inputPassword !== null) {
-      // 2. 방 입장 요청
-      requestJoinRoom(roomInfo, inputPassword);
-    }
+    openCreateRoomDlg()
   } else {
     requestJoinRoom(roomInfo, inputPassword);
   }
 }
 
 const requestJoinRoom = (roomInfo, inputPassword) => {
-  axios.post('/api/joinRoom', null, {
-    params: {
-      'userID' : userInfo.userID,
-      'roomID': roomInfo.roomID,
-      'inputPassword': inputPassword
-      }
-  })
+  axios.post('/api/joinRoom', {
+    'userID' : userInfo.userID,
+    'roomID': roomInfo.roomID,
+    'inputPassword': inputPassword
+    }, 
+    null
+  )
   .then(res => {
     console.log(`received joinRoom. responseCode:${res.data.responseCode}`);
     if (res.data.responseCode === 2) {
@@ -86,6 +85,13 @@ const requestJoinRoom = (roomInfo, inputPassword) => {
   .catch();
 }
 
+  const openCreateRoomDlg = () => {
+    setDlgIsOpen(true);
+  }
+  const closeRoomPasswordDlg = () => {
+    setDlgIsOpen(false);
+  }
+
 const showPleaseLogin = () => {
     alert("로그인이 필요합니다");
     document.location.href = `/#/Login`;
@@ -94,7 +100,7 @@ const showPleaseLogin = () => {
 
   return (
       <div className="rooms">
-        <h1>방 목록</h1>
+        {/* <h1>방 목록</h1> */}
         <div className="rooms__container">
           {
           roomInfos.map((roomInfo) => (
@@ -103,6 +109,13 @@ const showPleaseLogin = () => {
               roomInfo={roomInfo}
               onClickCallBack={isLoggedIn ? () => { onRoomClicked(roomInfo) } : showPleaseLogin}/>
           ))}
+        <RoomPasswordDlg
+          userInfo={userInfo}
+          roomInfo={clickedRoomInfo}
+          dlgIsOpen={dlgIsOpen}
+          requestJoinRoom={requestJoinRoom}
+          closeDlgCallBack={closeRoomPasswordDlg}
+        />
         </div>
       </div>
   );

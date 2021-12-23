@@ -27,15 +27,15 @@ body {
   /* overflow: scroll; */
 }
 
-hr {
+ hr {
   height: 1px;
   background-color: #e5e5e5;
   border: none;
 }
+/* color: rgb(96, 96, 96); */
 
 span {
   text-decoration: none;
-  color: rgb(96, 96, 96);
   font-size: 14px;
 }
 

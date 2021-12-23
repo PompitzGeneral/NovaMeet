@@ -1,37 +1,36 @@
 const users = [];
 
-const addUser = ({ id, name, imageUrl, room }) => {
-  // JavaScript Mastery = javascriptmastery
+const addUser = ({ socketID, userID, userDisplayName, userImageUrl, roomID }) => {
 
-  name = name.trim().toLowerCase();
-  room = room.trim().toLowerCase();
+  userID = userID.trim().toLowerCase();
+  roomID = roomID.trim().toLowerCase();
 
   const existingUser = users.find(
-    (user) => user.room === room && user.name === name
+    (user) => user.roomID === roomID && user.userID === userID
   );
 
   if (existingUser) {
     return { error: "Username is taken" };
   }
 
-  const user = { id, name, imageUrl, room };
+  const user = { socketID, userID, userDisplayName, userImageUrl, roomID };
 
   users.push(user);
-  console.log(users, "users");
+  console.log("addUser_users : ", users);
   return { user };
 };
 
-const removeUser = (id) => {
-  const index = users.findIndex((user) => user.id === id);
+const removeUser = (socketID) => {
+  const index = users.findIndex((user) => user.socketID === socketID);
 
   if (index !== -1) {
     return users.splice(index, 1)[0];
   }
 };
 
-const getUser = (id) => users.find((user) => user.id === id);
+const getUser = (socketID) => users.find((user) => user.socketID === socketID);
 
-const getUsersInRoom = (room) => users.filter((user) => user.room === room);
+const getUsersInRoom = (roomID) => users.filter((user) => user.roomID === roomID);
 
 // module.exports = { addUser, removeUser, getUser, getUsersInRoom };
 export default { addUser, removeUser, getUser, getUsersInRoom };

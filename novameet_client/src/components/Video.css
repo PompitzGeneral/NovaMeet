@@ -1,0 +1,10 @@
+.video {
+    border-radius: 20px;
+    width: 100%;
+    /* 좌우 반전 */
+    -o-transform : scaleX(-1);
+  -moz-transform : scaleX(-1);
+  -webkit-transform : scaleX(-1);
+  -ms-transform: scaleX(-1);
+  transform : scaleX(-1);
+  }

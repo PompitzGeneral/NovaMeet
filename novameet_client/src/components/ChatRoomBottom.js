@@ -9,17 +9,21 @@ import MicOffIcon from '@material-ui/icons/MicOff';
 import CallEndIcon from '@material-ui/icons/CallEnd';
 import ChatOutlinedIcon from '@material-ui/icons/ChatOutlined';
 import ChatBubbleOutlinedIcon from '@material-ui/icons/ChatBubbleOutlined';
+import AccessAlarmIcon from '@material-ui/icons/AccessAlarm';
+import WatchLaterIcon from '@material-ui/icons/WatchLater';
 import PeopleIcon from '@material-ui/icons/People';
 import PeopleOutlineOutlinedIcon from '@material-ui/icons/PeopleOutlineOutlined';
 import RemoveCircleIcon from '@material-ui/icons/RemoveCircle';
 
 import { makeStyles } from '@material-ui/core/styles';
 
-const ChatRoomBottom = ({ isRoomOwner, deleteRoomCallback, setVideoTrack, setAudioTrack, setIsShowedMember, setIsShowedChat}) => {
+const ChatRoomBottom = ({ isRoomOwner, deleteRoomCallback, setVideoTrack, setAudioTrack, setIsShowedRecordCard, setIsShowedMember, setIsShowedChat}) => {
   // Camera
   const [isCameraBtnOn, setIsCameraBtnOn] = useState(true);
   // 음소거
   const [isMuteBtnOn, setIsMuteBtnOn] = useState(true);
+  // 기록창
+  const [isRecordBtnOn, setIsRecordBtnOn] = useState(false);
   // 멤버창
   const [isMemberBtnOn, setIsMemberBtnOn] = useState(false);
   // 채팅창
@@ -39,9 +43,16 @@ const ChatRoomBottom = ({ isRoomOwner, deleteRoomCallback, setVideoTrack, setAud
     setIsMuteBtnOn(!isMuteBtnOn);
   }
 
+  const onRecordBtnClicked = () => {
+    console.log("onRecordBtnClicked");
+    setIsShowedRecordCard(!isRecordBtnOn);
+    setIsRecordBtnOn(!isRecordBtnOn);
+  }
+
   const onMemberBtnClicked = () => {
     console.log("onMemberBtnClicked");
     // 멤버 창 Off -> On 인 경우, 채팅창 닫는다
+
     if (!isMemberBtnOn) {
       setIsShowedChat(false);
       setIsChatBtnOn(false);
@@ -109,15 +120,26 @@ const ChatRoomBottom = ({ isRoomOwner, deleteRoomCallback, setVideoTrack, setAud
         )
       }
       {
-        isMemberBtnOn ? (
-          <Fab className={classes.fab} aria-label="chat" onClick={onMemberBtnClicked}>
-            <PeopleIcon />
+        isRecordBtnOn ? (
+          <Fab className={classes.fab} aria-label="chat" onClick={onRecordBtnClicked}>
+            <WatchLaterIcon />
           </Fab>
         ) : (
-          <Fab className={classes.fab} aria-label="chat" onClick={onMemberBtnClicked}>
-            <PeopleOutlineOutlinedIcon />
+          <Fab className={classes.fab} aria-label="chat" onClick={onRecordBtnClicked}>
+            <AccessAlarmIcon />
           </Fab>
         )
+      }
+      {
+        // isMemberBtnOn ? (
+        //   <Fab className={classes.fab} aria-label="chat" onClick={onMemberBtnClicked}>
+        //     <PeopleIcon />
+        //   </Fab>
+        // ) : (
+        //   <Fab className={classes.fab} aria-label="chat" onClick={onMemberBtnClicked}>
+        //     <PeopleOutlineOutlinedIcon />
+        //   </Fab>
+        // )
       }
       {
         isChatBtnOn ? (

@@ -4,10 +4,13 @@ import Avatar from '@material-ui/core/Avatar';
 
 // name -> 현재 접속한 유저
 // const Message = ({ message: { text, user }, name }) => {
-const Message = ({ message: { user, imageUrl, text }, name }) => {
+const Message = ({ message: { userID, userDisplayName, userImageUrl, text }, userInfo }) => {
   let isSentByCurrentUser = false;
-  const trimmedName = name.trim().toLowerCase();
-  if (user === trimmedName) {
+  console.log("test, loginUserID:", userInfo)
+  console.log("message, text:", text)
+  const trimmedLoginUserID = userInfo.userID.trim().toLowerCase();
+  // const trimmedLoginUserID = loginUserID;
+  if (userID === trimmedLoginUserID) {
     isSentByCurrentUser = true;
   }
   return isSentByCurrentUser ? (
@@ -18,9 +21,9 @@ const Message = ({ message: { user, imageUrl, text }, name }) => {
     </div>
   ) : (
     <div className="messageContainer start">
-        <Avatar alt="Remy Sharp" src={imageUrl} />
+        <Avatar alt="Remy Sharp" src={userImageUrl} />
         <div>
-          <p className="sentMessage ml-10">{user}</p>
+          <p className="sentMessage ml-10">{userDisplayName}</p>
           <div className="messageBox backgroundLight ml-10">
             <p className="messageText black">{text}</p>
           </div>

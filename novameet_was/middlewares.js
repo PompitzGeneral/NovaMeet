@@ -17,7 +17,7 @@ const s3ImageUploader = multerS3({
 export const userImageUpload = multer({
     dest: "/userImages/",
     limits: {
-        fileSize: 3000000,
+        fileSize: 100000000,
     },
     storage: s3ImageUploader
 });
@@ -25,7 +25,7 @@ export const userImageUpload = multer({
 export const roomImageUpload = multer({
     dest: "/roomImages/",
     limits: {
-        fileSize: 3000000,
+        fileSize: 100000000,
     },
     storage: s3ImageUploader
 });

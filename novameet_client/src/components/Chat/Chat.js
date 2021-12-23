@@ -19,7 +19,8 @@ const Chat = ({ chatSocket, userInfo }) => {
 
     console.log("Chat ChatSocket : ", chatSocket);
     chatSocket.on("message", (message) => {
-       console.log("chatSocket.on message");
+       console.log("chatSocket.on message", message);
+       console.log("test, userInfo:", userInfo);
        localMessages = [...localMessages, message];
        setMessages(localMessages);
     });
@@ -40,7 +41,7 @@ const Chat = ({ chatSocket, userInfo }) => {
   return (
     <div className="chatScreen">
       <Paper elevation={5} className="chatScreenPaper">
-        <Messages messages={messages} name={userInfo.userDisplayName} />
+        <Messages messages={messages} userInfo={userInfo} />
         <Input
           message={message}
           setMessage={setMessage}

@@ -4,11 +4,11 @@ import Message from "./Message/Message";
 
 import "./Messages.css";
 
-const Messages = ({ messages, name }) => (
+const Messages = ({ messages, userInfo }) => (
   <div className="messages">
     {messages.map((message, i) => (
       <div key={i}>
-        <Message message={message} name={name} />
+        <Message message={message} userInfo={userInfo} />
       </div>
     ))}
   </div>

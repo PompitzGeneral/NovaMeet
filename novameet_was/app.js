@@ -7,6 +7,8 @@ import sessionFileStore from "session-file-store";
 const app = express();
 
 app.use(cors());
+app.use(express.json())
+app.use(express.urlencoded({ extended: "false"}))
 
 const FileStore = sessionFileStore(session);
 app.use(session({

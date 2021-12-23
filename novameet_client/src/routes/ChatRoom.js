@@ -8,16 +8,24 @@ import Members from 'components/Members';
 import "routes/ChatRoom.css";
 import Grid from '@material-ui/core/Grid';
 import ChatRoomBottom from "components/ChatRoomBottom"
+import RecordCard from "components/RecordCard"
+
+import MicIcon from '@material-ui/icons/Mic';
+import MicOffIcon from '@material-ui/icons/MicOff';
+import Avatar from '@material-ui/core/Avatar';
 
 import { makeStyles } from '@material-ui/core/styles';
 
 let gSignalingSocket = null;
 let gChatSocket = null;
 
-const ChatRoom = () => {
+const ChatRoom = ({refreshUserInfo}) => {
 
   const [chatSocket, setChatSocket] = useState(null);
   // const [isRoomOwner, setIsRoomOwner] = useState(false);
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [isShowedRecordCard, setIsShowedRecordCard] = useState(false)
   const [isShowedMember, setIsShowedMember] = useState(false);
   const [isShowedChat, setIsShowedChat] = useState(false);
   const [signalingUserInfos, setSignalingUserInfos] = useState([]);
@@ -26,14 +34,14 @@ const ChatRoom = () => {
   const location = useLocation();
 
   // For WebRTC
-  let localVideoRef  = useRef(null);
+  let localVideoRef = useRef(null);
   let pcs = null;
 
   let userInfo = undefined;
   let isRoomOwner = false;
   if (location.state) {
     console.log("location.state", location.state);
-    userInfo = location.state.userInfo;
+    userInfo    = location.state.userInfo;
     isRoomOwner = location.state.isRoomOwner
   }
   let {roomID} = useParams();
@@ -41,7 +49,7 @@ const ChatRoom = () => {
   // For Chat
   console.log("location:", location);
   console.log("ChatRoom UserInfo:", userInfo);
-  console.log("ChatRoom Params:",useParams());
+  console.log("ChatRoom Params:", useParams());
   
   const pc_config = {
     "iceServers": [
@@ -50,6 +58,11 @@ const ChatRoom = () => {
       }
     ]
   }
+
+  // if (!userInfo) {
+  //   alert("로그인이 필요합니다.");
+  //   history.push('/');
+  // }
 
   useEffect(() => {
     console.log("char_room, userInfo : ", userInfo);
@@ -77,29 +90,44 @@ const ChatRoom = () => {
 
   const initSignalingSocket = () => {
     gSignalingSocket = io.connect('https://www.novameet.ga:4001', {secure: true});
+
     let localStream = null;
 
     // 자신을 제외한 같은 방의 모든 user 목록을 받아온다.
     // 해당 user들에게 offer signal을 보낸다(createOffer() 함수 호출).
     gSignalingSocket.on('all_users', allUsers => {
+      console.log('received all_users', allUsers);
       let len = allUsers.length;
-
       for (let i = 0; i < len; i++) {
-        createPeerConnection(allUsers[i].id, allUsers[i].email, gSignalingSocket, localStream);
-        let pc = pcs[allUsers[i].id];
+        createPeerConnection(
+          allUsers[i].socketID, 
+          allUsers[i].userID,
+          allUsers[i].userDisplayName,
+          allUsers[i].userImageUrl,
+          allUsers[i].isVideoEnabled,
+          allUsers[i].isAudioEnabled,
+          localStream
+        );
+        let pc = pcs[allUsers[i].socketID];
         if (pc) {
+          console.log('try create offer');
           pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true })
             .then(sdp => {
               console.log('create offer success');
               pc.setLocalDescription(new RTCSessionDescription(sdp));
               gSignalingSocket.emit('offer', {
                 sdp: sdp,
-                offerSendID: gSignalingSocket.id,
-                offerSendEmail: userInfo.userDisplayName,
-                offerReceiveID: allUsers[i].id
+                receiverSocketID: allUsers[i].socketID,
+                senderSocketID: gSignalingSocket.id,
+                senderUserID: userInfo.userID,
+                senderUserDisplayName: userInfo.userDisplayName,
+                senderUserImageUrl: userInfo.userImageUrl,
+                isVideoEnabled: isVideoEnabled,
+                isAudioEnabled: isAudioEnabled
               });
             })
             .catch(error => {
+              console.log('create offer failed');
               console.log(error);
             })
         }
@@ -110,20 +138,27 @@ const ChatRoom = () => {
     // 해당 user에게 answer signal을 보낸다(createAnswer(sdp) 함수 호출).
     gSignalingSocket.on('getOffer', (data) => {
       console.log('get offer');
-      createPeerConnection(data.offerSendID, data.offerSendEmail, gSignalingSocket, localStream);
-      let pc = pcs[data.offerSendID];
+      createPeerConnection(
+        data.senderSocketID, 
+        data.senderUserID,
+        data.senderUserDisplayName,
+        data.senderUserImageUrl,
+        data.isVideoEnabled,
+        data.isAudioEnabled,
+        localStream
+      );
+      let pc = pcs[data.senderSocketID];
       if (pc) {
         pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(() => {
           console.log('answer set remote description success');
           pc.createAnswer({ offerToReceiveVideo: true, offerToReceiveAudio: true })
             .then(sdp => {
-
               console.log('create answer success');
               pc.setLocalDescription(new RTCSessionDescription(sdp));
               gSignalingSocket.emit('answer', {
                 sdp: sdp,
-                answerSendID: gSignalingSocket.id,
-                answerReceiveID: data.offerSendID
+                receiverSocketID: data.senderSocketID,
+                senderSocketID: gSignalingSocket.id,
               });
             })
             .catch(error => {
@@ -136,7 +171,7 @@ const ChatRoom = () => {
     // 본인 RTCPeerConnection의 RemoteDescription으로 상대방의 RTCSessionDescription을 설정한다.
     gSignalingSocket.on('getAnswer', (data) => {
       console.log('get answer');
-      let pc= pcs[data.answerSendID];
+      let pc= pcs[data.senderSocketID];
       if (pc) {
         pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
       }
@@ -147,16 +182,40 @@ const ChatRoom = () => {
       console.log('get candidate');
       let pc = pcs[data.candidateSendID];
       if (pc) {
+        console.log('getCandidate, data :', data);
         pc.addIceCandidate(new RTCIceCandidate(data.candidate)).then(() => {
           console.log('candidate add success');
         })
       }
     });
 
+    gSignalingSocket.on('mediaEnabledChanged', (data) => {
+      console.log('mediaEnabledChanged', data);
+      if (data.type === "video") {
+        setSignalingUserInfos(oldUsers => oldUsers.map(oldUser =>
+          (oldUser.socketID === data.senderSocketID) ?
+            { ...oldUser, isVideoEnabled: data.isEnabled } : oldUser
+          )
+        );
+      } else if (data.type === "audio") {
+        setSignalingUserInfos(oldUsers => oldUsers.map(oldUser =>
+          (oldUser.socketID === data.senderSocketID) ?
+            { ...oldUser, isAudioEnabled: data.isEnabled } : oldUser
+          )
+        );
+      }
+    });
+
     gSignalingSocket.on('user_exit', (data) => {
-      pcs[data.id].close();
-      delete pcs[data.id];
-      setSignalingUserInfos(oldUsers => oldUsers.filter(user => user.id !== data.id));
+      if (!pcs)
+        return
+
+      if (!pcs[data.socketID])
+        return
+
+      pcs[data.socketID].close();
+      delete pcs[data.socketID];
+      setSignalingUserInfos(oldUsers => oldUsers.filter(user => user.socketID !== data.socketID));
     })
 
     // MediaStream 설정 및 RTCPeerConnection 이벤트
@@ -165,14 +224,21 @@ const ChatRoom = () => {
       audio: true,
       video: {
         width: 240, // ori:240
-        height: 240 // ori:240
+        height: 240, // ori:240
       }
     }).then(stream => {
       if (localVideoRef.current) localVideoRef.current.srcObject = stream;
 
       localStream = stream;
 
-      gSignalingSocket.emit('join_room', {room: roomID, email: userInfo.userDisplayName});
+      gSignalingSocket.emit('join_room', {
+        room: roomID,
+        userID: userInfo.userID,
+        userDisplayName: userInfo.userDisplayName,
+        userImageUrl: userInfo.userImageUrl,
+        isVideoEnabled: isVideoEnabled,
+        isAudioEnabled: isAudioEnabled
+      });
     }).catch(error => {
       console.log(`getUserMedia error: ${error}`);
     });
@@ -199,29 +265,34 @@ const ChatRoom = () => {
     })
 
     console.log("join to ChatServer");
-    gChatSocket.emit("join", { name: userInfo.userDisplayName, imageUrl: userInfo.userImageUrl, room: roomID }, (error) => {
+    gChatSocket.emit("join", {
+      userID: userInfo.userID,
+      userDisplayName: userInfo.userDisplayName, 
+      userImageUrl: userInfo.userImageUrl, 
+      roomID: roomID 
+    }, (error) => {
       if (error) {
         alert(error);
       }
     });
   }
 
-  const createPeerConnection = (socketID, email, newSocket, localStream) => {
-
+  const createPeerConnection = (socketID, userID, userDisplayName, userImageUrl, isVideoEnabled, isAudioEnabled, localStream) => {
+    console.log('createPeerConnection');
     let pc = new RTCPeerConnection(pc_config);
 
     // add pc to peerConnections object
     pcs = { ...pcs, [socketID]: pc };
 
     // onicecandidate 이벤트
-    // offer 또는 answer signal을 생성한 후부터 본인의 icecadidate 정보 이벤트가 발생한다.
-    // offer 또는 answer를 보냈던 상대방에게 본인의 icecandidate 정보를 Signaling Server를 통해 보낸다.
+    // offer 또는 answer SDP을 생성한 후부터 본인의 icecadidate 정보 이벤트가 발생한다.
+    // icecandidate 정보를 Signaling Server를 통해 상대에게 전달한다
     pc.onicecandidate = (e) => {
       if (e.candidate) {
         console.log('onicecandidate');
-        newSocket.emit('candidate', {
+        gSignalingSocket.emit('candidate', {
           candidate: e.candidate,
-          candidateSendID: newSocket.id,
+          candidateSendID: gSignalingSocket.id,
           candidateReceiveID: socketID
         });
       }
@@ -234,16 +305,22 @@ const ChatRoom = () => {
     }
 
     // ontrack 이벤트
-    // 상대방의 RTCSessionDescription을 본인의 RTCPeerConnection에서의 remoteSessionDescription으로 지정하면 상대방의 track 데이터에 대한 이벤트가 발생한다.
+    // 상대방의 RTCSessionDescription을 본인의 RTCPeerConnection의 remoteSessionDescription으로 지정하면 상대방의 track 데이터에 대한 이벤트가 발생한다.
     // 해당 데이터에서 MediaStream을 상대방의 video, audio를 재생할 video 태그에 등록한다.
     pc.ontrack = (e) => {
       console.log('ontrack success');
-      setSignalingUserInfos(oldUsers => oldUsers.filter(user => user.id !== socketID));
+      
+      setSignalingUserInfos(oldUsers => oldUsers.filter(user => user.socketID !== socketID));
       setSignalingUserInfos(oldUsers => [...oldUsers, {
-        id: socketID,
-        email: email,
+        socketID: socketID,
+        userID: userID,
+        userDisplayName: userDisplayName,
+        userImageUrl: userImageUrl,
+        isVideoEnabled: isVideoEnabled,
+        isAudioEnabled: isAudioEnabled,
         stream: e.streams[0]
       }]);
+      console.log('ontrack success_setSignalingUserInfos', signalingUserInfos);
     }
 
     if (localStream) {
@@ -260,6 +337,14 @@ const ChatRoom = () => {
 
   const setVideoTrack = (enabled) => {
     console.log(`setVideoTrack(${enabled})`);
+
+    setIsVideoEnabled(enabled)
+    gSignalingSocket.emit('mediaEnabledChanged', {
+      senderSocketID: gSignalingSocket.id,
+      type: "video",
+      isEnabled: enabled
+    });
+
     const myStream = localVideoRef.current.srcObject;
     if (myStream) {
       myStream
@@ -270,6 +355,14 @@ const ChatRoom = () => {
 
   const setAudioTrack = (enabled) => {
     console.log(`setAudioTrack(${enabled})`);
+
+    setIsAudioEnabled(enabled)
+    gSignalingSocket.emit('mediaEnabledChanged', {
+      senderSocketID: gSignalingSocket.id,
+      type: "audio",
+      isEnabled: enabled
+    });
+
     const myStream = localVideoRef.current.srcObject;
     if (myStream) {
       myStream
@@ -287,11 +380,10 @@ const ChatRoom = () => {
     console.log("deleteRoomCallback");
 
     // 1. WAS에게 DB 삭제 요청
-    axios.post('/api/deleteRoom', null, {
-      params: {
-        'roomID': roomID,
-        }
-    })
+    axios.post('/api/deleteRoom', {
+      'roomID': roomID,
+      }, 
+      null)
     .then(res => {
       console.log(`received deleteRoom. responseCode:${res.data.responseCode}`);
       if (res.data.responseCode === 1) {
@@ -304,7 +396,7 @@ const ChatRoom = () => {
     })
     .catch();
 
-    // 2. Chat Server에게 deleteRoom 요청
+    // 2. Chat Server에게 leave_all 요청
     gChatSocket.emit('leave_all');
   }
 
@@ -321,26 +413,56 @@ const ChatRoom = () => {
     <>
       <div className={classes.root}>
         <Grid container spacing={2}>
-          <Grid item >
-              <video
+          <Grid item>
+            <video
+              width="240"
+              height="240"
               className="video"
               muted
               ref={localVideoRef}
-              autoPlay></video>      
-            <p>{userInfo.userDisplayName}</p>
+              autoPlay>
+              {/* 211118 DGLEE - 추후에 video 꺼지면 아바타로 대체되도록 수정 */}
+              {/* {isVideoEnabled ? (
+                <>
+                </>
+              ) : (
+                <Avatar alt="Remy Sharp" src={userInfo.userImageUrl} />
+              )
+              } */}
+            </video>
+
+            <div>
+              {isAudioEnabled ? <MicIcon /> : <MicOffIcon />}
+              {userInfo.userDisplayName}
+            </div>
           </Grid>
           {signalingUserInfos.map((userInfo, index) => {
+            console.log("isVideoEnabled", userInfo.isVideoEnabled);
+            console.log("userDisplayName", userInfo.userDisplayName);
             return (
               <Grid item>
                 <Video
-                  key={index}
-                  displayName={userInfo.email}
-                  stream={userInfo.stream}
-                />
+                    key={index}
+                    userID={userInfo.userID}
+                    displayName={userInfo.userDisplayName}
+                    isVideoEnabled={userInfo.isVideoEnabled}
+                    isAudioEnabled={userInfo.isAudioEnabled}
+                    stream={userInfo.stream}
+                  />
               </Grid>
             );
           })}
         </Grid>
+      </div>
+      <div className={isShowedRecordCard ? undefined : 'hidden'}>
+        {
+          (userInfo && roomID) ? (
+            <RecordCard userInfo={userInfo} refreshUserInfo={refreshUserInfo}/>
+          ) : (
+            <div>
+            </div>
+          )
+        }
       </div>
       <div className={isShowedMember ? undefined : 'hidden'}>
         {
@@ -370,7 +492,8 @@ const ChatRoom = () => {
           isRoomOwner={isRoomOwner}
           deleteRoomCallback={deleteRoomCallback}
           setVideoTrack={setVideoTrack}
-          setAudioTrack={setAudioTrack} 
+          setAudioTrack={setAudioTrack}
+          setIsShowedRecordCard={setIsShowedRecordCard}
           setIsShowedMember={setIsShowedMember}
           setIsShowedChat={setIsShowedChat}
           />

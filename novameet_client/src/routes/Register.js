@@ -87,24 +87,24 @@ const Register = () => {
   
     // 시작시간 체크
     let start = new Date().getTime();  
-    axios.post('/api/emailAuth', null, {
-      params: {
-        'user_email': inputEmail,
-        'auth_number': randNum
-      }
-    })
+    axios.post('/api/emailAuth', {
+      'user_email': inputEmail,
+      'auth_number': randNum
+      },
+      null
+    )
       .then(res => {
         console.log(res);
         // 종료시간 체크
-        let end = new Date().getTime(); 
-        console.log(`이메일 인증번호 발송 요청-응답 소요시간 : ${(end-start)}ms`); 
+        let end = new Date().getTime();
+        console.log(`이메일 인증번호 발송 요청-응답 소요시간 : ${(end - start)}ms`);
         if (res.data.responseCode === 1) {
           alert(`입력된 이메일 주소로 인증번호를 발송했습니다.`);
           setAuthNumber(randNum);
-        } else if (res.data.responseCode === 0){
+        } else if (res.data.responseCode === 0) {
           alert(`이미 사용중인 이메일 주소입니다.`);
           setAuthNumber('');
-        } else if (res.data.responseCode === -1){
+        } else if (res.data.responseCode === -1) {
           alert(`인증번호 발송 실패. error message : ${res.data.msg}`);
           setAuthNumber('');
         } else {
@@ -129,9 +129,6 @@ const Register = () => {
         return;
       }
 
-      console.log(`test2 authNumber:${authNumber}`);
-
-      /*
       if (!inputEmailAuth) {
         alert("이메일 인증 번호를 입력해 주세요");
         return;
@@ -155,16 +152,14 @@ const Register = () => {
       if (!checkDisplayNamePattern(inputDisplayName)) {
         alert("닉네임 형식이 유효하지 않습니다.(한글,영문 2~30자)");
         return;
-      }*/
+      }
 
-      // 유효성 검사 통과하면 서버에 등록 요청
-      axios.post('/api/register', null, {
-        params: {
-          'user_id': inputEmail,
-          'user_pw': inputPW,
-          'user_displayname': inputDisplayName
-        }
-      })
+      axios.post('/api/register', {
+        'user_id': inputEmail,
+        'user_pw': inputPW,
+        'user_displayname': inputDisplayName
+      }
+      , null)
         .then(res => {
           console.log(res);
           if (res.data.responseCode === -1) {
@@ -188,12 +183,12 @@ const Register = () => {
       <div>
         <h2>회원가입</h2>
         <div>
-          <label htmlFor='input_name'>닉네임</label>
-          <input type='text' className='textInput' value={inputDisplayName} onChange={handleInputDisplayName}/>
+          <label htmlFor='input_email'>이메일</label>
+          <input type='text' className='textInput' value={inputEmail} onChange={handleInputEmail} />
         </div>
         <div>
-          <label htmlFor='input_email'>이메일</label>
-          <input type='text' className='textInput' value={inputEmail} onChange={handleInputEmail}/>
+        <label htmlFor='input_name'>닉네임</label>
+          <input type='text' className='textInput' value={inputDisplayName} onChange={handleInputDisplayName}/>
           <button type='button' className='textInput submitButton' onClick={onEmailAuthButtonClicked}>인증번호 발송</button>
         </div>
         <div>
