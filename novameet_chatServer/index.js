@@ -6,8 +6,8 @@ import net from "net"
 import userUtil from "./users.js";
 
 const wsServer = https.createServer({
-  key: fs.readFileSync('/etc/letsencrypt/archive/www.novameet.ga/privkey2.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/archive/www.novameet.ga/cert2.pem')
+  key: fs.readFileSync('/etc/letsencrypt/archive/www.novameet.ga/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/archive/www.novameet.ga/cert.pem')
 });
 
 const io = socketio(wsServer);
@@ -78,7 +78,8 @@ io.on("connection", (socket) => {
         console.log(`targetClient`, targetClient)
         if (targetClient) {
           let message =
-            `message;${senderUser.userID};${senderUser.userDisplayName};${senderUser.userImageUrl};${messageText};${timestamp}\n`
+            // `message;${senderUser.userID};${senderUser.userDisplayName};${senderUser.userImageUrl};${messageText};${timestamp}\n`
+          `message;${senderUser.userID};${senderUser.userDisplayName};${senderUser.userImageUrl};${messageText};${timestamp}`
           targetClient.socket.write(message)
         }
       })
@@ -87,10 +88,21 @@ io.on("connection", (socket) => {
 
   socket.on("leave_all", () => {
     console.log("receive leave_all");
-    const user = userUtil.getUser(socket.id);
-    if (user) {
-      io.to(user.roomID).emit("leave_room");
+    // Send Message To WebSocket Connection
+    const senderUser = userUtil.getUser(socket.id);
+    const equalRoomUsers = userUtil.getUsersInRoom(senderUser.roomID)
+    if (senderUser) {
+      io.to(senderUser.roomID).emit("leave_room");
     }
+    // Send Message To TCP Socket Connection
+    equalRoomUsers.forEach((user) => {
+      let targetClient = tcpClients.find((client) => user.socketID === client.socketID);
+      // tcp
+      if (targetClient) {
+        let message = `leave_room`
+        targetClient.socket.write(message)
+      }
+    })
   });
 
   socket.on("disconnect", () => {
@@ -137,6 +149,8 @@ const tcpServer = net.createServer( (socket) => {
       receivedJoinMessageFromTCPSocket(socketID, feilds)
     } else if (messageName === "sendMessage") {
       receivedSendMessageFromTCPSocket(socketID, feilds[1])
+    } else if (messageName === "leave_all") {
+      receivedLeaveAllMessageFromTCPSocket(socketID)
     } else {
       console.log(`received unknown Message`)
     }
@@ -210,6 +224,27 @@ const receivedSendMessageFromTCPSocket = (socketID, messageText) => {
     text: messageText,
     timestamp: timestamp
   });
+}
+
+const receivedLeaveAllMessageFromTCPSocket = (socketID) =>  {
+  console.log(`received leaveAllMessage`)
+  let senderUser = userUtil.getUser(socketID)
+  let equalRoomUsers = userUtil.getUsersInRoom(senderUser.roomID)
+
+  console.log(`equalRoomUsers`, equalRoomUsers)
+  // 메시지를 보낸 유저와 같은 방에 있는 유저들에게 메시지 전송(TCP User)
+  equalRoomUsers.forEach((user) => {
+    let targetClient = tcpClients.find((client) => user.socketID === client.socketID);
+    // tcp
+    if (targetClient) {
+      let message = `leave_room`
+      targetClient.socket.write(message)
+    }
+  })
+  // socket.io
+  if (senderUser.roomID) {
+      io.to(senderUser.roomID).emit("leave_room");
+  }
 }
 
 const doPlusMemberCount = (roomID) => {

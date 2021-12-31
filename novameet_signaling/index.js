@@ -1,8 +1,8 @@
 var fs = require('fs');
 
 const server = require('https').createServer({
-    key: fs.readFileSync('/etc/letsencrypt/archive/www.novameet.ga/privkey2.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/archive/www.novameet.ga/cert2.pem')
+    key: fs.readFileSync('/etc/letsencrypt/archive/www.novameet.ga/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/archive/www.novameet.ga/cert.pem')
   });
 
 const io = require('socket.io')(server);

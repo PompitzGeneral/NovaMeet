@@ -17,6 +17,7 @@ room_member_max_count,
 room_thumbnail_url,
 room_thumbnail_key
 FROM rooms
+ORDER BY room_idx DESC
 `;
 
 const roomExistCheckQuery = `
