@@ -15,7 +15,14 @@ Web, Android 두가지 플랫폼에서 개발했습니다.
 Android : Java, Kotlin, Retrofit2, Glide  
 Front-End : HTML/CSS, JavaScript, React.js   
 Back-End : Java, Node.js(Express), Socket.io  
-ETC : WebRTC
+ETC : WebRTC  
+
+### **[주요 기능]**
+novameet_chatServer : 채팅서버
+novameet_client     : 웹 프론트
+novameet_push       : 푸시알림 서버
+novameet_signaling  : 실시간 미디어 스트리밍을 위한 WebRTC 시그널링 서버
+novameet_was        : 어플리케이션 서버
 
 ### **[주요 기능]**
 
